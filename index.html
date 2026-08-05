@@ -1,14 +1,112 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Materi Biologi</title>
-  </head>
-  <body>
-    <a href="enzim.html">Enzim</a>
-    <a href="vir-enzim.html">Virtual Lab Enzim</a>
-    <a href="form-enzim.html">Formatif Enzim</a>
-    <a href="katabolisme.html">Katabolisme</a>
-    <a href="form-katabolisme.html">Formatif Katabolisme</a>
-    <a href="anabolisme.html">Anabolisme</a>
-  </body>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materi Biologi</title>
+  <style>
+    :root {
+      --primary-color: #2e7d32;
+      --primary-hover: #1b5e20;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      padding: 25px 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #555;
+      border-bottom: 2px solid #e0e0e0;
+      padding-bottom: 5px;
+    }
+
+    .link-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      display: block;
+      padding: 12px 16px;
+      background-color: var(--primary-color);
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background-color: #455a64;
+    }
+
+    .btn-secondary:hover {
+      background-color: #263238;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Materi Biologi</h1>
+
+    <!-- Kelompok Materi Enzim -->
+    <div class="section-title">1. Enzim</div>
+    <div class="link-group">
+      <a href="enzim.html" class="btn">Materi Enzim</a>
+      <a href="vir-enzim.html" class="btn btn-secondary">Virtual Lab Enzim</a>
+      <a href="form-enzim.html" class="btn btn-secondary">Formatif Enzim</a>
+    </div>
+
+    <!-- Kelompok Materi Katabolisme -->
+    <div class="section-title">2. Katabolisme</div>
+    <div class="link-group">
+      <a href="katabolisme.html" class="btn">Materi Katabolisme</a>
+      <a href="form-katabolisme.html" class="btn btn-secondary">Formatif Katabolisme</a>
+    </div>
+
+    <!-- Kelompok Materi Anabolisme -->
+    <div class="section-title">3. Anabolisme</div>
+    <div class="link-group">
+      <a href="anabolisme.html" class="btn">Materi Anabolisme</a>
+    </div>
+  </div>
+
+</body>
 </html>
