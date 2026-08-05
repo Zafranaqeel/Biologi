@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Napas Sel — Ekspedisi Katabolisme</title>
+<style>
+:root{
+  --bg-deep:#0B211D;
+  --bg-panel:#123330;
+  --bg-panel-2:#15413C;
+  --gold:#F4B942;
+  --coral:#FF6B5B;
+  --cyan:#4ECDC4;
+  --ink:#F2EFE6;
+  --ink-dim:#B9CFC9;
+  --line:rgba(242,239,230,0.14);
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
+  --ease-elastic: cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+  background:#000; font-family:var(--font-body); color:var(--ink);
+  touch-action:none;
+}
+#viewport{
+  position:fixed; inset:0; overflow:hidden; background:
+    radial-gradient(ellipse at 20% 15%, #133a34 0%, #0B211D 55%, #071512 100%);
+}
+/* ---- Stage: fixed 1600x900 design, scaled to fit any screen/orientation, letterboxed, no scroll ---- */
+#zoomLayer{
+  position:absolute; inset:0; width:100%; height:100%;
+  transform-origin:center center;
+  transition: transform .55s var(--ease-elastic);
+  touch-action:none;
+}
+#stage{
+  position:absolute; top:0; left:0;
+  width:1280px; height:720px;
+  transform-origin: top left;
+  transition: transform .5s var(--ease-elastic);
+}
+.screen{
+  position:absolute; inset:0; width:1280px; height:720px;
+  display:none; flex-direction:column;
+  opacity:0;
+}
+.zoom-hint-global{
+  position:fixed; top:22px; left:50%; transform:translateX(-50%);
+  z-index:20; background:rgba(11,33,29,.85); border:1px solid rgba(244,185,66,.35);
+  color:var(--ink); font-family:var(--font-mono); font-size:12px; letter-spacing:1px;
+  padding:9px 18px; border-radius:999px; pointer-events:none; opacity:0; transition:opacity .6s ease;
+}
+.zoom-hint-global.show{ opacity:1; }
+.zoom-reset-global{
+  position:fixed; bottom:26px; right:26px; z-index:21;
+  background:var(--gold); color:#1c1206; border:none; width:52px; height:52px; border-radius:50%;
+  font-size:20px; cursor:pointer; box-shadow:0 12px 26px rgba(244,185,66,.35);
+  display:none; align-items:center; justify-content:center;
+  transition: transform .4s var(--ease-elastic), opacity .3s;
+}
+.zoom-reset-global.show{ display:flex; }
+.zoom-reset-global:active{ transform:scale(.88); }
+.screen.active{ display:flex; }
+@keyframes screenIn{
+  0%{ opacity:0; transform:scale(.92) translateY(18px); }
+  100%{ opacity:1; transform:scale(1) translateY(0); }
+}
+.screen.active{ animation: screenIn .55s var(--ease-elastic) forwards; }
+
+/* decorative organic background blobs (mitochondrial cristae motif) */
+.cristae-bg{ position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.35; }
+
+/* ---- OUTER ELASTIC FRAME ---- */
+.outer-frame{
+  position:absolute; inset:18px;
+  border:2px solid rgba(244,185,66,0.35);
+  border-radius:28px;
+  pointer-events:none;
+  transition: border-color .5s var(--ease-elastic), box-shadow .5s var(--ease-elastic);
+  box-shadow: 0 0 0 1px rgba(78,205,196,0.08) inset;
+}
+
+/* ---- Reusable top bar ---- */
+.topbar{
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:26px 46px 10px 46px;
+}
+.brand{
+  display:flex; align-items:center; gap:14px; font-family:var(--font-display);
+}
+.brand-mark{
+  width:40px; height:40px; border-radius:50%;
+  background:conic-gradient(from 0deg, var(--gold), var(--coral), var(--cyan), var(--gold));
+  animation: spin 6s linear infinite;
+  box-shadow:0 0 18px rgba(244,185,66,.5);
+}
+@keyframes spin{ to{ transform:rotate(360deg);} }
+.brand h1{ margin:0; font-size:22px; letter-spacing:.5px; font-weight:400;}
+.brand small{ display:block; color:var(--ink-dim); font-size:12px; letter-spacing:2px; text-transform:uppercase;}
+.navbtns{ display:flex; gap:10px; }
+.pill-btn{
+  font-family:var(--font-body); font-size:14px; font-weight:600;
+  background:rgba(242,239,230,0.06); color:var(--ink);
+  border:1px solid var(--line); padding:10px 20px; border-radius:999px;
+  cursor:pointer; transition:transform .25s var(--ease-elastic), background .2s;
+}
+.pill-btn:hover{ background:rgba(244,185,66,0.16); transform:translateY(-2px); }
+.pill-btn:active{ transform:scale(.94); }
+.pill-btn.gold{ background:var(--gold); color:#1c1206; border-color:transparent; }
+.pill-btn.gold:hover{ background:#ffca5c; }
+.icon-btn{
+  width:44px; height:44px; border-radius:50%; border:1px solid var(--line);
+  background:rgba(242,239,230,0.06); color:var(--ink); cursor:pointer; font-size:18px;
+  display:flex; align-items:center; justify-content:center; transition:transform .2s var(--ease-elastic);
+}
+.icon-btn:active{ transform:scale(.88); }
+
+/* ================= SPLASH ================= */
+#screen-splash{ align-items:center; justify-content:center; }
+.splash-card{
+  position:relative; z-index:2;
+  width:640px; background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--line); border-radius:26px; padding:48px 54px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(244,185,66,.08) inset;
+  animation: cardPop .7s var(--ease-elastic);
+}
+@keyframes cardPop{ 0%{ transform:scale(.8) rotate(-1.5deg); opacity:0;} 100%{ transform:scale(1) rotate(0); opacity:1;} }
+.splash-eyebrow{ font-family:var(--font-mono); font-size:12px; letter-spacing:3px; color:var(--cyan); text-transform:uppercase; }
+.splash-card h1{ font-family:var(--font-display); font-size:46px; margin:8px 0 2px 0; font-weight:400; line-height:1.05;}
+.splash-card h1 em{ color:var(--gold); font-style:normal; }
+.splash-sub{ color:var(--ink-dim); font-size:15px; margin:0 0 30px 0; max-width:480px; line-height:1.5;}
+.field{ margin-bottom:18px; }
+.field label{ display:block; font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim); margin-bottom:8px; }
+.field input, .field select{
+  width:100%; padding:14px 16px; font-size:16px; font-family:var(--font-body);
+  background:rgba(0,0,0,.25); border:1.5px solid var(--line); border-radius:12px; color:var(--ink); outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input:focus, .field select:focus{ border-color:var(--gold); box-shadow:0 0 0 4px rgba(244,185,66,.15); }
+.field input::placeholder{ color:rgba(242,239,230,.35); }
+.splash-actions{ display:flex; align-items:center; gap:18px; margin-top:8px; }
+.btn-start{
+  flex:1; padding:16px 20px; font-size:16px; font-weight:700; letter-spacing:.5px;
+  background:var(--gold); color:#1c1206; border:none; border-radius:14px; cursor:pointer;
+  transition: transform .25s var(--ease-elastic), box-shadow .25s;
+  box-shadow:0 10px 24px rgba(244,185,66,.25);
+}
+.btn-start:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 16px 30px rgba(244,185,66,.35); }
+.btn-start:active{ transform:scale(.95); }
+.btn-start:disabled{ opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+.hint-err{ color:var(--coral); font-size:12px; margin-top:6px; min-height:16px; }
+.loading-wrap{ display:none; align-items:center; gap:14px; margin-top:22px; }
+.loading-wrap.show{ display:flex; }
+.loading-bar{ flex:1; height:8px; border-radius:99px; background:rgba(242,239,230,.1); overflow:hidden; }
+.loading-fill{ height:100%; width:0%; background:linear-gradient(90deg, var(--cyan), var(--gold)); border-radius:99px; transition:width .15s linear; }
+.loading-pct{ font-family:var(--font-mono); font-size:13px; color:var(--ink-dim); width:44px; text-align:right;}
+.sound-toggle{ position:absolute; top:24px; right:24px; z-index:5; }
+
+/* ================= MENU ================= */
+#screen-menu .menu-body{ flex:1; display:flex; align-items:center; justify-content:center; gap:38px; padding:0 60px 40px; position:relative; z-index:2;}
+.menu-hero{ max-width:430px; }
+.menu-hero .splash-eyebrow{ }
+.menu-hero h2{ font-family:var(--font-display); font-size:40px; font-weight:400; margin:10px 0 14px; line-height:1.1;}
+.menu-hero p{ color:var(--ink-dim); font-size:15px; line-height:1.6; }
+.energy-meter{ margin-top:26px; }
+.energy-meter .lbl{ font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim); margin-bottom:6px;}
+.atp-track{ width:100%; height:14px; border-radius:99px; background:rgba(0,0,0,.3); border:1px solid var(--line); overflow:hidden;}
+.atp-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--coral),var(--gold),var(--cyan)); transition:width .6s var(--ease-elastic); }
+.menu-cards{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; width:560px; }
+.menu-card{
+  background:linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--line); border-radius:20px; padding:26px 22px; cursor:pointer;
+  transition: transform .3s var(--ease-elastic), border-color .3s, box-shadow .3s;
+  position:relative; overflow:hidden;
+}
+.menu-card:hover{ transform:translateY(-6px) scale(1.02); border-color:rgba(244,185,66,.4); box-shadow:0 18px 36px rgba(0,0,0,.4);}
+.menu-card:active{ transform:scale(.96); }
+.menu-card .mc-icon{ font-size:30px; margin-bottom:12px; display:block;}
+.menu-card h3{ margin:0 0 6px; font-family:var(--font-display); font-weight:400; font-size:20px;}
+.menu-card p{ margin:0; color:var(--ink-dim); font-size:13px; line-height:1.5;}
+.menu-card.wide{ grid-column:1/-1; }
+
+/* ================= MATERI ================= */
+.content-wrap{ flex:1; display:flex; gap:0; position:relative; z-index:2; padding:0 46px 34px; min-height:0; }
+.tabs-rail{ width:230px; display:flex; flex-direction:column; gap:8px; padding-right:20px; border-right:1px solid var(--line); overflow-y:auto;}
+.tab-item{
+  text-align:left; background:transparent; border:1px solid transparent; color:var(--ink-dim);
+  padding:12px 14px; border-radius:12px; cursor:pointer; font-size:13.5px; font-family:var(--font-body);
+  transition:all .25s var(--ease-elastic); display:flex; gap:10px; align-items:center;
+}
+.tab-item .num{ font-family:var(--font-mono); font-size:11px; color:var(--cyan); }
+.tab-item:hover{ background:rgba(242,239,230,.05); color:var(--ink); }
+.tab-item.active{ background:rgba(244,185,66,.14); color:var(--gold); border-color:rgba(244,185,66,.3); transform:translateX(4px); }
+.materi-panel{ flex:1; padding:26px 0 0 34px; overflow-y:auto; }
+.materi-panel h2{ font-family:var(--font-display); font-weight:400; font-size:28px; margin:0 0 4px; }
+.materi-panel .sub{ color:var(--cyan); font-family:var(--font-mono); font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px;}
+.materi-panel .body-text{ color:var(--ink-dim); font-size:14.5px; line-height:1.75; max-width:640px; }
+.materi-panel .body-text b{ color:var(--ink); }
+.materi-flex{ display:flex; gap:28px; align-items:flex-start; }
+.stat-chip{ display:inline-block; background:rgba(78,205,196,.12); border:1px solid rgba(78,205,196,.3); color:var(--cyan); padding:4px 12px; border-radius:99px; font-size:12px; font-family:var(--font-mono); margin:3px 6px 3px 0;}
+
+/* zoomable diagram */
+.zoom-box{
+  width:420px; height:340px; flex-shrink:0; border-radius:20px; border:1px solid var(--line);
+  background:radial-gradient(ellipse at 50% 30%, #17453e, #0d2521 80%);
+  position:relative; overflow:hidden; touch-action:none; cursor:grab;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+}
+.zoom-inner{ width:100%; height:100%; transform-origin:center center; transition:transform .35s var(--ease-elastic); display:flex; align-items:center; justify-content:center;}
+.zoom-hint{ position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:11px; color:var(--ink-dim); font-family:var(--font-mono); letter-spacing:1px; pointer-events:none;}
+.zoom-reset{ position:absolute; top:10px; right:10px; z-index:3; }
+
+/* ================= KUIS ================= */
+#screen-kuis .content-wrap{ flex-direction:column; padding:0 60px 30px; }
+.kuis-top{ display:flex; align-items:center; gap:20px; margin-bottom:18px; }
+.qcounter{ font-family:var(--font-mono); color:var(--cyan); font-size:13px; letter-spacing:1px; }
+.progress-track{ flex:1; height:8px; background:rgba(0,0,0,.3); border-radius:99px; overflow:hidden; border:1px solid var(--line);}
+.progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--coral),var(--gold)); transition:width .5s var(--ease-elastic); }
+.score-tag{ font-family:var(--font-mono); font-size:13px; background:rgba(244,185,66,.12); color:var(--gold); padding:6px 14px; border-radius:99px; border:1px solid rgba(244,185,66,.3);}
+.quiz-card{
+  flex:1; background:linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--line); border-radius:24px; padding:30px 40px; display:flex; flex-direction:column; min-height:0;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.qtype-badge{ align-self:flex-start; font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#1c1206; background:var(--cyan); padding:5px 12px; border-radius:99px; margin-bottom:14px;}
+.qtext{ font-family:var(--font-display); font-size:23px; font-weight:400; line-height:1.4; margin:0 0 22px; max-width:920px;}
+.qbody{ flex:1; overflow-y:auto; min-height:0; }
+.mc-options{ display:flex; flex-direction:column; gap:12px; max-width:760px; }
+.mc-opt{
+  text-align:left; padding:14px 18px; border:1.5px solid var(--line); border-radius:14px; background:rgba(0,0,0,.18);
+  color:var(--ink); font-size:15px; cursor:pointer; transition:all .2s var(--ease-elastic); display:flex; gap:12px; align-items:center;
+}
+.mc-opt .letter{ width:26px; height:26px; border-radius:50%; background:rgba(242,239,230,.08); display:flex; align-items:center; justify-content:center; font-size:12px; font-family:var(--font-mono); flex-shrink:0;}
+.mc-opt:hover{ border-color:var(--gold); transform:translateX(4px); }
+.mc-opt.selected{ border-color:var(--gold); background:rgba(244,185,66,.12); }
+.mc-opt.correct{ border-color:#5FD98A; background:rgba(95,217,138,.14); }
+.mc-opt.wrong{ border-color:var(--coral); background:rgba(255,107,91,.14); }
+
+.match-wrap{ display:flex; gap:60px; max-width:900px; }
+.match-col{ flex:1; display:flex; flex-direction:column; gap:10px; }
+.match-item{
+  padding:12px 16px; border:1.5px solid var(--line); border-radius:12px; background:rgba(0,0,0,.18);
+  font-size:13.5px; cursor:pointer; transition:all .2s var(--ease-elastic); position:relative;
+}
+.match-item .tagnum{ font-family:var(--font-mono); font-size:10px; color:var(--cyan); margin-right:6px;}
+.match-item:hover{ border-color:var(--cyan); }
+.match-item.sel{ border-color:var(--gold); background:rgba(244,185,66,.14); }
+.match-item.paired{ border-color:var(--cyan); background:rgba(78,205,196,.1); }
+.match-item.correct{ border-color:#5FD98A; background:rgba(95,217,138,.14); }
+.match-item.wrong{ border-color:var(--coral); background:rgba(255,107,91,.14); }
+
+.fill-wrap{ max-width:760px; font-size:17px; line-height:2.4; color:var(--ink-dim); }
+.fill-input{
+  display:inline-block; width:170px; margin:0 6px; padding:8px 12px; font-size:15px; font-family:var(--font-mono);
+  background:rgba(0,0,0,.25); border:none; border-bottom:2px solid var(--gold); color:var(--gold); text-align:center; outline:none;
+}
+.fill-input.correct{ border-color:#5FD98A; color:#5FD98A; }
+.fill-input.wrong{ border-color:var(--coral); color:var(--coral); }
+
+.drag-wrap{ display:flex; flex-direction:column; gap:26px; max-width:900px; }
+.drag-slots{ display:flex; gap:14px; flex-wrap:wrap; }
+.drag-slot{
+  min-width:170px; height:52px; border:2px dashed var(--line); border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-size:13.5px; color:var(--ink-dim); background:rgba(0,0,0,.15); transition:border-color .2s, background .2s;
+}
+.drag-slot.filled{ border-style:solid; border-color:var(--cyan); background:rgba(78,205,196,.1); color:var(--ink); }
+.drag-slot.correct{ border-color:#5FD98A; background:rgba(95,217,138,.14); }
+.drag-slot.wrong{ border-color:var(--coral); background:rgba(255,107,91,.14); }
+.drag-pool{ display:flex; gap:12px; flex-wrap:wrap; padding-top:10px; border-top:1px solid var(--line); }
+.drag-tile{
+  padding:12px 18px; border-radius:12px; background:var(--gold); color:#1c1206; font-weight:700; font-size:13.5px;
+  cursor:grab; user-select:none; touch-action:none; transition:transform .15s var(--ease-elastic), opacity .2s;
+  box-shadow:0 8px 16px rgba(244,185,66,.2);
+}
+.drag-tile.dragging{ opacity:.85; transform:scale(1.08); z-index:50; box-shadow:0 16px 30px rgba(0,0,0,.4); }
+.drag-tile.placed{ opacity:.25; pointer-events:none; }
+
+.quiz-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+.feedback-msg{ font-size:13.5px; font-family:var(--font-mono); min-height:18px; }
+.feedback-msg.ok{ color:#5FD98A; }
+.feedback-msg.no{ color:var(--coral); }
+
+/* ================= HASIL ================= */
+#screen-hasil{ align-items:center; justify-content:center; }
+.hasil-card{
+  width:680px; text-align:center; background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--line); border-radius:26px; padding:46px 50px; position:relative; z-index:2;
+  animation: cardPop .7s var(--ease-elastic);
+}
+.hasil-card .splash-eyebrow{ }
+.hasil-score{ font-family:var(--font-display); font-size:74px; color:var(--gold); margin:6px 0; }
+.hasil-score span{ font-size:28px; color:var(--ink-dim); }
+.hasil-msg{ font-size:15px; color:var(--ink-dim); max-width:460px; margin:0 auto 26px; line-height:1.6;}
+.hasil-actions{ display:flex; gap:14px; justify-content:center; }
+.review-list{ text-align:left; max-height:220px; overflow-y:auto; margin:0 0 22px; padding:4px 6px; border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+.review-row{ display:flex; gap:10px; padding:9px 4px; font-size:12.5px; border-bottom:1px dashed rgba(242,239,230,.08); align-items:flex-start;}
+.review-row:last-child{ border-bottom:none; }
+.review-row .dot{ flex-shrink:0; width:9px; height:9px; border-radius:50%; margin-top:4px; }
+.review-row .dot.ok{ background:#5FD98A; }
+.review-row .dot.no{ background:var(--coral); }
+.review-row .rt{ color:var(--ink-dim); line-height:1.5; text-align:left;}
+
+/* ================= PENGEMBANG ================= */
+#screen-dev .dev-body{ flex:1; display:flex; align-items:center; justify-content:center; gap:50px; position:relative; z-index:2;}
+.dev-photo-wrap{
+  width:260px; height:340px; border-radius:20px; overflow:hidden; border:3px solid var(--gold);
+  box-shadow:0 25px 60px rgba(0,0,0,.5), 0 0 0 8px rgba(244,185,66,.08);
+  flex-shrink:0; position:relative;
+}
+.dev-photo-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+.dev-info{ max-width:420px; }
+.dev-info .splash-eyebrow{}
+.dev-info h2{ font-family:var(--font-display); font-size:34px; font-weight:400; margin:8px 0 2px; }
+.dev-info .role{ color:var(--gold); font-size:14px; margin-bottom:18px; font-family:var(--font-mono); letter-spacing:1px;}
+.dev-info p.desc{ color:var(--ink-dim); font-size:14.5px; line-height:1.7; margin-bottom:18px;}
+.dev-tags{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* scrollbar */
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:rgba(244,185,66,.35); border-radius:99px; }
+::-webkit-scrollbar-track{ background:transparent; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="viewport">
+  <div class="zoom-hint-global" id="zoomHintGlobal">🤏 Cubit layar untuk memperbesar detail</div>
+  <button class="zoom-reset-global" id="btnResetZoomGlobal" title="Kembalikan ukuran normal">⤾</button>
+  <div id="zoomLayer">
+  <div id="stage">
+
+    <!-- ============ SPLASH ============ -->
+    <section class="screen active" id="screen-splash">
+      <svg class="cristae-bg" viewBox="0 0 1600 900" preserveAspectRatio="none">
+        <path d="M-50,700 C200,600 300,800 550,700 C800,600 900,800 1150,700 C1350,620 1450,750 1650,680 L1650,950 L-50,950 Z" fill="#0e2e29"/>
+        <path d="M-50,760 C250,680 350,850 600,770 C850,690 950,850 1200,770 C1400,710 1500,820 1650,760 L1650,950 L-50,950 Z" fill="#0a201c"/>
+      </svg>
+      <button class="icon-btn sound-toggle" id="btnMuteSplash" title="Suara">🔊</button>
+      <div class="splash-card">
+        <div class="splash-eyebrow">Gim Edukasi Biologi · Sistem Respirasi Sel</div>
+        <h1>Napas Sel: <em>Ekspedisi Katabolisme</em></h1>
+        <p class="splash-sub">Selami jalur glikolisis, siklus Krebs, hingga rantai transpor elektron. Isi data dirimu untuk memulai misi memahami bagaimana sel mengubah glukosa menjadi energi kehidupan. Cubit layar kapan pun untuk memperbesar detail.</p>
+        <div class="field">
+          <label for="inpNama">Nama Peserta</label>
+          <input type="text" id="inpNama" placeholder="Tulis nama lengkapmu" maxlength="40" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="inpKelas">Kelas</label>
+          <input type="text" id="inpKelas" placeholder="Contoh: XII IPA 3" maxlength="20" autocomplete="off">
+        </div>
+        <div class="hint-err" id="splashErr"></div>
+        <div class="splash-actions">
+          <button class="btn-start" id="btnStart">Mulai Ekspedisi →</button>
+        </div>
+        <div class="loading-wrap" id="loadingWrap">
+          <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+          <div class="loading-pct" id="loadingPct">0%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MENU ============ -->
+    <section class="screen" id="screen-menu">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <div><h1>Napas Sel</h1><small>Menu Utama</small></div>
+        </div>
+        <div class="navbtns">
+          <button class="icon-btn" id="btnMuteMenu" title="Suara">🔊</button>
+        </div>
+      </div>
+      <div class="menu-body">
+        <div class="menu-hero">
+          <div class="splash-eyebrow" id="sapaanUser">Halo, Penjelajah</div>
+          <h2>Pilih jalur eksplorasimu</h2>
+          <p>Pelajari materi katabolisme terlebih dahulu, lalu uji pemahamanmu lewat 10 soal menantang dengan beragam bentuk: pilihan ganda, menjodohkan, isian, dan seret kata.</p>
+          <div class="energy-meter">
+            <div class="lbl">Progres ATP Pemahaman</div>
+            <div class="atp-track"><div class="atp-fill" id="atpFillMenu"></div></div>
+          </div>
+        </div>
+        <div class="menu-cards">
+          <div class="menu-card" data-go="materi">
+            <span class="mc-icon">🧬</span>
+            <h3>Materi</h3>
+            <p>Glikolisis, dekarboksilasi oksidatif, siklus Krebs, transpor elektron & fermentasi.</p>
+          </div>
+          <div class="menu-card" data-go="kuis">
+            <span class="mc-icon">⚡</span>
+            <h3>Kuis Tantangan</h3>
+            <p>10 soal beragam bentuk untuk menguji pemahamanmu.</p>
+          </div>
+          <div class="menu-card wide" data-go="dev">
+            <span class="mc-icon">👩‍🏫</span>
+            <h3>Tentang Pengembang</h3>
+            <p>Kenali siapa di balik gim edukasi ini.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MATERI ============ -->
+    <section class="screen" id="screen-materi">
+      <div class="topbar">
+        <div class="brand">
+          <button class="icon-btn" id="btnBackMateri">←</button>
+          <div><h1>Materi</h1><small>Katabolisme · Respirasi Sel</small></div>
+        </div>
+        <div class="navbtns">
+          <button class="pill-btn gold" id="btnMateriToKuis">Lanjut ke Kuis →</button>
+        </div>
+      </div>
+      <div class="content-wrap">
+        <div class="tabs-rail" id="materiTabs"></div>
+        <div class="materi-panel" id="materiPanel"></div>
+      </div>
+    </section>
+
+    <!-- ============ KUIS ============ -->
+    <section class="screen" id="screen-kuis">
+      <div class="topbar">
+        <div class="brand">
+          <button class="icon-btn" id="btnBackKuis">←</button>
+          <div><h1>Kuis Tantangan</h1><small>10 Soal Beragam Bentuk</small></div>
+        </div>
+        <div class="navbtns"><button class="icon-btn" id="btnMuteKuis" title="Suara">🔊</button></div>
+      </div>
+      <div class="content-wrap">
+        <div style="flex:1; display:flex; flex-direction:column; min-height:0;">
+          <div class="kuis-top">
+            <span class="qcounter" id="qCounter">SOAL 1 / 10</span>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            <span class="score-tag" id="scoreTag">SKOR 0</span>
+          </div>
+          <div class="quiz-card">
+            <span class="qtype-badge" id="qTypeBadge">Pilihan Ganda</span>
+            <h3 class="qtext" id="qText"></h3>
+            <div class="qbody" id="qBody"></div>
+            <div class="quiz-actions">
+              <span class="feedback-msg" id="feedbackMsg"></span>
+              <div style="display:flex; gap:10px;">
+                <button class="pill-btn" id="btnCheck">Periksa Jawaban</button>
+                <button class="pill-btn gold" id="btnNext" style="display:none;">Soal Berikutnya →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HASIL ============ -->
+    <section class="screen" id="screen-hasil">
+      <svg class="cristae-bg" viewBox="0 0 1600 900" preserveAspectRatio="none">
+        <path d="M-50,700 C200,600 300,800 550,700 C800,600 900,800 1150,700 C1350,620 1450,750 1650,680 L1650,950 L-50,950 Z" fill="#0e2e29"/>
+      </svg>
+      <div class="hasil-card">
+        <div class="splash-eyebrow">Ekspedisi Selesai</div>
+        <div class="hasil-score" id="hasilSkor">0<span>/100</span></div>
+        <p class="hasil-msg" id="hasilMsg">Selamat menyelesaikan ekspedisi katabolisme!</p>
+        <div class="review-list" id="reviewList"></div>
+        <div class="hasil-actions">
+          <button class="pill-btn" id="btnUlangi">Ulangi Kuis</button>
+          <button class="pill-btn gold" id="btnKeMenu">Kembali ke Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PENGEMBANG ============ -->
+    <section class="screen" id="screen-dev">
+      <div class="topbar">
+        <div class="brand">
+          <button class="icon-btn" id="btnBackDev">←</button>
+          <div><h1>Pengembang</h1><small>Tentang Gim Ini</small></div>
+        </div>
+      </div>
+      <div class="dev-body">
+        <div class="dev-photo-wrap">
+          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAcFBQYFBAcGBgYIBwcICxILCwoKCxYPEA0SGhYbGhkWGRgcICgiHB4mHhgZIzAkJiorLS4tGyIyNTEsNSgsLSz/2wBDAQcICAsJCxULCxUsHRkdLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCz/wAARCAH0AWgDASIAAhEBAxEB/8QAGwAAAQUBAQAAAAAAAAAAAAAAAAIDBAUGAQf/xABEEAABAwIEBAQDBQYEBAYDAAABAAIDBBEFEiExBhNBUSIyYXEUgaEjQlKRsQcVYnLB4RYkM9E0U4LwJTVDRHOSY4Px/8QAGwEBAAMBAQEBAAAAAAAAAAAAAAECAwQFBgf/xAAqEQEAAgICAgICAgICAwEAAAAAAQIDESExBBIFQRNRImEGcTKBFCORof/aAAwDAQACEQMRAD8AwCLI3QvnH7SLIsEIQFh2RYdkITkFh2RYdkIQFh2RZCEAhCEAhCEBYIsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7IsOyEICw7BFh2QhOQWHZFh2QhAWCLIQgLDsiw7BCEBYdgiw7BCEHCBlOiF0+UoVoQBshA2QqpCEIQCEIQCEIQCEIQCEIQCEIQCEIQCEIQCEIUAQugE7An2CcbTTPF2wyEfylTqVZvWO5NITpppxvDJ/wDUpBje3djh7tKaRF6z1JKEIRcIQhAIQhAIQhAIQhAIQhAIQhAIQhAIQhAIQhAHylCD5ShWhAHlCEDyhCqkIQhAIQhAIQhAIQhAIQhAIQhAIQhALoBcQGgknYAXJUihoJ8RnEUDb93HZq2mFYBT4c3NlEkx3ef6K1azLzvM+Qx+LGp5n9M3Q8NVtW0PktAw/i3PyV9ScL0MABkYZnfxFXobbdGgWsViHyfkfLZ806idQix0EELQI4WNA6AJwRAbABPXC5dXeXbLe08yZ5Xom3U7HAgsafcKTdJJUSiMlo6lVT4PRzeeFpPoLKoq+GWWvTyFh/C5ahyZeLqkxEu7D8hnxT/GzA1VBU0jrSxm34hso63ksYeCHAOB6FUWIYG03kpjlO5aVnNX0vifMUyarl4lQISnsdG8teLOG4SVV70TuNwEIQiQhCEAhCEAhCEAhCEAhCEAhCEAfKUIPlKFaEAeUIQPKEKqQhCEAhCEAhCEAhCEAhCEAhCEApeHYfNiVW2GLQHzO7BR4onzytjjaXPcbABeiYLhTMOomsABe7V57lXpX2eZ8j50eJj47k7h+GQUFMIoW27nqSpmUBOAAJLgtuuHwWTLbJabWnk0Ugp4RkqPiuIUGAUD6yvlDWtGjb6n0SIUONjc7YEoLHjdpHuF4zj/AO0rHMUqHCjnOH0oPhZFo4j1Kr8P474loJxI3EpZx1ZP42ldEYJmFHuLjZNucVnuFuNqTiZnw8rBS17Rcxk6P9W/7LQyNNjZc94ms6laINF/qkOee6beSL901zCs9r6Ou11TThdd5l1wqF44VmJYcysYSBaUagjqs1Ix0cjmPFiCto5VeK0AqIzIwfaNH5qJh9D8Z8jOOYxZJ4Z1C6Ra4OhHRcWb62OQhCFIEIQgEIQgEIQgEIQgEIQgD5ShB8pQrQgDyhCB5QhVSEIQgEIQgEIQgEIQgEIQgEIVjgeH/vHEmsePso/G/wDoEiNssuWuKk3t1DQcL4NyoxWTi0rx4B2C1jW5RZMQNygAAADspK6YjUPzvzPJt5GSb2ACMvougLpe2KMyOIsNkckGaqqjw+mdK8i4BOq8V4txmfiHEnPLj8NGfs2n9VsOL8afUE0kTi0v83o3ssb8IHG26vj726aY9RyzzqU9l2LD3uIs1a2nwJ0tiW6K3pOHbWJauuLSiYhkaLCJopGTQudHIw5muboQV6ngWLur6VrKkZahgs7Tzeqgw4K1jdGp6Oj5MoczwuGxCzvX3UmYW88IIJCgSNLCrCnmE0fY7EJueDMLhcFq6nRCDmSwbhNnwuLUAqEuuSClEpJRaJ0z+L0fLk57B4XeYDoqxayeNssbmOtZ26zFRA6mndE4bHQ+ii0Ps/i/L/NT8dp5g0hCFV7IQhCAQhCAQhCAQhCAQhCAPlKEHylCtCANghA2HshVSEIQgEIQgEIQgEIQgEIQgFuOHaMUdFGwj7WYcx/9AstgtGK3FYmOF42nO/2C2mHSCernkHlaQ1q0pD5v5vyfWsYY/wC1vELNToSGbJYWz46SwCbKl4jxOOho3Fx0aL27noFcPeI4i4m1l5jxjihqsTFK112R+J/83T6Ks8zpriruVU6SSqqHzSHM57i7+yusKwszuDi1QcJon1MzABpdelYLg4jja4t1XVipttmyekIVDgrGMBcNVYtw5jRo1W3Ia3ol5BZdPrpwzkmVI+jydFAnhyk6LSSRAjRV9TT3abBRMLVsz3NNPKJANNiO4Vk17ZYw5puHC4UCrjIcRZJoqjlS8h58Lj4ffsuPLTfLeC6uK2oCigq2ezOwhVksZjkOi40krh2QgqQ27ZVeMU3MgbOB42b+oVo9IcGuic1wuCLJLt8XPODJF4ZNCcniME74z902+SbVH39bRasWj7CEIRYIQhAIQhAIQhAIQhAHylC4fKUK0Il0bD2QgbD2QqpCEIQCEIQCEIQCEIQCEIN7aboNDgzPgsEqa06PlORvsN1fcOC+GiU7yuLlRY6f3fgNHTjo0X+a0mCx8vCaRv8A+MH89VrXt+feflnLltdasTgTbUskBq0eWrsbrW0tE97jZrGlxXlDQ+tqnynV8rsxWp4+xTJDHSgi8ztR6BROEsIdXTNcG3CvjpNpddLRjruWp4SwW7GOe3XdegRUgiiAtso2F0LKSIC1rBSpqgagL0619KvMyZPexmViZIslukumnPCiZIdIuFHliB3SzIUnmjqqyv0qK6hzNJG6z1XC6M31BB0K27ixzSCQqbFaaEsJvqqzT2heuTXaDQ1YqoLmwkbo4evdJrI7gFZs4s3C8XaXutE85ZLdu61T7PZocwOoPcLzc2OaS3idqy64lSNyPISViuQ5IOyW5JJs0onaixeLLOyUbOFiq9XlfHzqN9t2+IKjVZfc/F5vyePG/oIQhQ9MIQhSBCEIBCEIBCEIOHylCHeUoVoRLo2HshA2HshVSEIQgEIQgEIQgEIQgE/Qxc/EKeL8cgCYVrw3EJcep77Nu5THbHyLemK1v6L45ls+OMHQaBbalZyoIYx92No+iwvF7DNjNJGNeZK1v1C37haQei2h+c5LbhIZ5U3USBkDinG+VVuMVQpqR7zoGNLvyCmWFY3LyfiqqfifF0kcbszYbRNttfc/UrYYM6fDKFnKY7O4eayoOCsL/e+NvqZG5rvL3adzderzOw+kpgyWWGMNFrOcAvUwarDLPE70pqXiSshjs5rj3JVpDj8c1sxIce6qamqwme7Yp4Mx7PCiOo4x4o379il77Z1xthFWNl8pBTxfdZrCs7ZMocSAtIGOyAqsTtfWjTpLKDV4hHBGSXC6dr3FkJIWWmaauYtLyomydbMYhj000hZE53yUZkOLVOoL7H8RKt2swrDWCSqkYy34juew7pU/FuC07bOdJH2Lm5f1WtJlnbW2SxfBawRGSQ5z2yq44QxN1Th/wNRfnUujb7uZ0/JSxxVw/XAsNWLEfeFlna2aHB8ahxCmeHQk+LKb3af+7rn8iPaOW+LnprKplnXUZWDi2opw5pu1wuD3CgEWNl5mtN4IckHeyUd0gnxKEomhmdGdnaKhe0skcw/dJCtqyXk17De19VBxFoFc8jZ2qiX03wmTVrURUIQofThCEIBCEIBCEIBCEIOO8pQunZCmESEIQoTAQhCAQhCAQhCAQhCAV9wg0HGHuI8sZKoVoOD/APzSb/41MduH5Djxr/6cxaPm8WYY0j/3AP5aravP2iydXZnFeHOPWe30WqJ8RW0Pz66Q0jIsZx7XiDApwHZXSWjHz/stgXfZ/JeVftJqnT1lJQxakkyuH0CvWPa0QrSFbh3ERw+k5FO9+eTwtZF53u7X6BWWKYa/DXYXUY/itRSQ1mcyimj5jorDQa7n3TvCPAlWHsr3ECbdoPRb3EOHXYthHwGKQRTsBzB2rSw9wQvYxTSri8iL2ne3kfDDhitRyHYvMyqfOI4YXwBzXs/E49FtaVlfhmJnDquKzHE5JGXyH89lIoOEaDhyrdPSveZzoHOIcW+ymuo34g7JK6eRxO5ef+7KuW1bdQvhpavMrXBKeRjryC2Y6LWNZ9iG26XuqbD6dzJWMOzQr+5FOW9Csoha0qHFG3pyFmIIXuq3AG1gSSegWprhmYWqhMLmSuuLZgW/Iqlu2lemcoKSXiXHC5s4pqFri3nXGd9t7X291R/tIhp8FNVhFPgFMY6l0csOIPLnTNAGrQb21W6FBT08Qa2ghytH4U3LFh8rBHLDlaOhGYD5FdNMnpDnvi9528ww7DKfGmTzsoBhkMNOxjZGvcQ+QbuF+/ZU8tRWYfKYJ7uYeo2K9nbhuE1DQ2Uue1vka3QBQMU4Oo8RbaCny+6rfLFu4Xx4vTqUTgDFv3hgZpXuLpaU5ddy3ormZpbKeiz2EYO/hnGmPAIjk+zf6haeuZaUHuvIyxq3DsiEIpp58SccmJDqsUwpsZltVw+yMS/1IXDqxQ8Um5mJsZ2KmYgLNpx/Ak9Pd+InWeP9ISEIVX2AQhCAQhCAQhCAQhCAQhCmFLdgoQhQvHQQhCAQhCAQhCAQhCAWg4Ot+95B3iKz6ueFZMmOxi9s7SFMduLz6+3jXj+k7G7RY1Qy3sGVLLntr/dal/hkIWY4vjIpXSt8zCHD5G60okbNGyVp0e0OB9wrw/PbdQdebU516LEYRgf+I+L6vEZm5qeB/KYLb2Wtr5+Rhc0t7ZGE/RWvCmFtouH6VhFnuaJHnqXHU/qunBXdtqzPrWZSoaFjIw1lmADSyTNh8eS8kjz6AqxMOVcLRsvRjTkne1GcNY93hYT2JU6mwxkDM2UZj1tsrABoGwSZJLiwThEzJqKBrTeyVPIWssNkwZrEi6akkJFlSZaVrtFqXXOqhyRtcQd05VOKgiqyOs8qjf14WkcLXM1Gi4aGM7sFvZKpJg8AjUKxa0EK0MZ4VrKSNrhljaPkpYpxl2CfEbQU5pdW0iZZ3HcLbU0khaMr2i4KqOf8XhcMx84GV/oRof0WuqwHD0WLg+wmxGjIsGPEjfY7rj8in26cdtxoy8qFUShjXOvsFKkda57Kgxis5NK89SFxRG+GsKdkhqMYB31V5iR+0iHZqpeHojPVGQ66q+xeKz2PHaytd7PxNojyIiVahCFi+yCEIUgQhCAQhCAQhCAQhCmGd+whCFDSOghCEAhCEAhCEAhCEAp2CyCLGqV5NvHZQU5BJyqiN/4XA/VI7ZZq+2O1f6bTieHmUcgte7bI4erhV8O0bybuYzlu926FS8UaJ8Pa8DUtCyfB9YWVOKYY425M3NYO7Xf3C2iN7fm9+OJabG3ZsGfGP/Uc2P8AMgLc0jRFCxl/KAF59XzB+HMcdmTxk/8A2C3kcgvpsu3xepY5Y/in2BamXNsTfZc+Iy6WTMtQF2ObTk0gaCqyrxDleBur3aBLq6oNYSqhsU4qWVMrHFt7j2VJaRELMMmBFwTfdTITA2wldqVj8c4oxmF3KwnCXVoG935bewTeHY3itVS86vwmfDnA2+0NwfZQn+mprXwMfZzgAVSSUraqpdynXYqivxaSZ9oyM2wuqKCl4x+NdM6up4acG4bGy9x+qr2vuY6a1tVJgtcxsxLoJDYE9CtTT1LJYw5hBBWEfBXYsIhM23LNy4i11eUHOorMc4uZ+iQm0Q0rnhJMgAuSoBqxdoNxdcfUDKrxLLR6on8Cyde7lcSRusLVFO5vzaQVcTVg1AWcxObNjuGN/wDk/RY5uay1xxoxXScqNx67LEY7Wc6URA9ei0fEtZ8LC0dXXWPoY3VtdnOuq46RqPaW7VcMUvLpg4jdW2Ix8yjf3bqF2gh5NKANE84CSJ7T1Cwnnl0+Nk/Hlrb9M0hdc3K4t7Gy4qP0KJ3GwhCESEIQgEIQgEIQgEIQphnaeQhCFDSOghCEAhCEAhCEAhCEAlws5lRGz8TgPqkKVhrOZilM3vIEjtnln1pM/wBPQXR58OMe5YLLy+orRgH7RIJn+GGpbynn3O/6L1WMjmvjOzhdeW/tSw4sjiqmCzo36kLrxR/PU/b8yyz3MNjiETn0VVE3XMzM23cLV4XXipwymnB0kja76LBcJ4z+/OHqeZxBmhHKlHytcrT8MHLhs1Eb5qWVzR/KTcfqt8Mel5rKlp9qbaF1RfqmnTXTPKI6ldaO/Rdcsi4ohPKC8XAKnvAeMoaLbKE2sjiOS4vupMdQ1wukcqTMmTRMbLnY0B3cLlTTcyLLJ4x2cpT6iNjbkgfNQp6+G3+q1W9Fq+0yrWYRSMlLhA3N6p8UrL2yAD0SDiUEZLnvACjvxymD7AuPyVYpP6bzW30sPh2tbcaJh2UGxNlDdj9NqDJl9wqutx6myOcKhgA3JNktWYU9bR2vnXboos0jtlTYHxAzFmSsjeH8l2XMNirotJ3VYk2hODnFU9SL8T0jbXMUD3/notDkF9lSgB2P1sp2hhYwHsSbn6LHNP8AFpSdsLxpU8zGG07DcMYL+51Urh2gDWhxbqdbqtdGcV4gqqnzM5hsfQaLYYXTiOMaLkyTqIq1hYWyxAWskRG8jgnXeZo9VEppM8jyO5WCayqK1uSslHrdMKXiYy17vUAqIqP0Xx7e2Ks/0EIQjcIQhAIQhAIQhAIQhTDK/YQhChrHQQhCAQhCAQhCAQhCAU3B/wDzimv+MKEpFA/l4jTvvazwkdss8bx2j+noEsnKqo3nbYqn44wk4lgU7WNBc5lx8la1zc8FwdRsnKR7a/DuW4+ICy3idS/NLRp4fwXjrsCxzkykinqDkkB+67oV7Fhk4p8f1P2dZHa/dzdf0XkPGOBHCeIZQGFsUpzsIWq4UxqSvwttK+X/ADtIQ6Jzjq623+y7r6nWSGNI9d1l6yCHBNztdynWUOjr462ljqYT4XjUfhPUH5qaHh7Pdbb2prTCZsblxqtNLOyNo8nMbcFTYanHzADMIs/URustC2mYalzrAXUKto54nc2n1Lenda4tRPLbHavtyq5BjIGYxh4I6SAqLNW1dIwOnppAO4F1cU+MsZ4amn8XtZSXYpTvZZrLegK7o64d0es9Mo/EqicNLKSocOngsuMhxapfbkOhYd3OF7BaX94RjY2UabGIGXuSfZOe5W9Y0o3YRVfD5p53l+Y+ANFrdDdUcnDLMUr80zniNu8bScth+pWllqavEXuZAzlxn7xHRWNJRR00IYCCdySuXLf6cuWa/wC0LhrBo8MllMUYjjcQcoWglkCYYQwWHVMyyglce3NraRG4EkkrLYhW/D4HW1bdH1sxEfcgeEfoSrLFKx8FAWw6zzkRRj+I9flv8lnsTLZ6yGii1hpGhgPc21KwzW+mtIRMHohHGFpadmVg0USigDQBZWLBYLimdy0kh7w3M87MaSVW4U/mMz/i1T+Ky8nCKqUGxLco+eijYMPsG/JCpnFv+OP8oUJTMUcHV7vQAKGs57foniRrBT/QQhCOkIQhAIQhAIQhAIQhIZ2CEIRpHQQhCAQhCAQhCAQhCAXWnK9pG4IK4pOHQCoxGCI7OcLpCmSYrWZlu4c02HNvvlCgUc7qHE+Wb5JdRfurKiIOZh6dFTcT0cslG58JyyxnOw9iFq/NckxNpmEvirhqDiXCjy7NnaMzH9ivIYo6zBcULXtdDVQO2PX+xXsPDWNMxTC4qgWDneGRv4XjcLvEnClLj0BfYR1AHhkA1Hv6LopeaxqXPKj4cxuN72zNdlgqSBIz/lyd/YrXtksRZeQSxV3C2IltSxzonGzrDwvHceq9AwHHIqyBkbpcxI+zdfzDsfULeltcE8tG0k6oc4gpMbtE6W5gt2aLLHG9hzRh3uFT1VOxgORpHoFoDTnumpaOPLd2qvFpjqV620yMvNLrBhSoYC4gujPzWhLYdWsiufUJQo2uFy2yibWn7bTeVdFdrbWACcymynfBMbrdRpSG3sqSy7MyuyNsFGMgtclJqqiw0/JUOKYi6YGipnEOdpK8fcHYeqytaIWrBU1f8TVvq26xwgx046Fx0c/+gSKSnI1IuTrfuuU1MHZWtb4WizR2CuKektYkLivb2nbToQQ6J+QZY0+2INao9TpoqKyouJZsmHQQ/wDOlF/Ya/7KThTcsAJ6BVuPv5+O0tONWwsuR6n/APitmFtLhznHQ5fqlunRhpN7RWPtU1T+ZVSO7lMouTqdyhZP0elfWsV/QQhCLBCEIBCEIBCEIBCEJDOwQhCNI6CEIQCEIQCEIQCEIQCsuHwDjcF9tf0VapFBUfC4hDMdmu1SO2PkVm2K0R+m4gk5NdY6BymVkAmiNhe4soUsYlY2WJ2YbhTqKcSsyO0K1h+cZK6l5xHWScJcYvhmOXD68i/Zj+69JpKrMwC47+4WX454aOK4TKYheVgzs9wqXgHiR1TTnDKxzhV0wyjMbZmjp7hbzHtT2juHPPb0HEcLpsTp3RzRNkDhbVee13DVdw7VOnw9zpaQm5iPmYe4P9F6JT1NwOqdljZUMIcAbqkWmOjplMD4miq2NimfllGmv9VpoalrrarO4vwxFM4yxN5cg1zM0PzVH+8cRwRwZURuljH3gunHl3xJMPRzJomXue47aLLUPGdLM0Ne8NProrL/ABHRkX5rfzXRFoR6rNrQ11zoV104GlwqCXiajJP2wUCo4npWnwvuU3CdS0lRUC2hVPW1rYwbmyoanihxY7lRkkrNV+K1s7yXMc1pWVrbXiul/XYtnuyJ9id3KBDVQw6D5+qz/MqJNe6U2OqcNBdZWrtaJbWixGH8QV9S1EcoFiF5vBT1YOrXBXVAauJ7budZc9q6S27yA3dV7znmt0BT0Dy6ku7eyhk6PI6rOUaU8EPxOMz1Lho51m+w0TmJVAeWwN2bv6lSZCyho3PNgdgO5VScx8TgbnW6iZfSfC4K2vOW30ShCFR9YEIQgEIQgEIQgEIQgDshCFMM7hCEKGkdBCEIBCEIBCEIBCEIBCJCImB8hDAdsxtdOUMMmJOLaRplt1A8I+aaljbPirxa0LfB8ddSWhnJdFtfstNDURStbNTvGo27qnw3hhsb2y1jg9w+4Ngr91NG8Wy5CB4S3otY3p8V8pfBfLvD/wBpsL2VMNja/Zeccb8H1VBX/wCIMFaRIw55Y2b/AMw/qr+ix11LjUuGVlo6hjvA4eWVp2PoVq4J2VEe4v1uta2mkvGmGQ4Y4gixqgbI0hsrRaRvYrTQym/os1i3Bb6XETiuAObDUeaWmJsyQdbdirDC8TdLliqYn00w0cyQWVba3wdr4gPGoUCtwqKoYQRe/dN1OMU1NJkkla35oix6jl0ZOx3zUEQyeK8FNlcXwHlv9BoVmarh3E6QnxvLe4NwvWxUQzDzAgpEtJDINgr1yTCdPGXYdiRNmP8AnZT8MwWeM/E1kz3Bn3dgV6BV8OxvOeA5H9xsVDrcPLsJmgc0tmaA5pA0JCtbNMxpNYZyIMzWDQkYkyMUrswGykU8QgiMktgRus9imJGsqeRD4r7WVKxMzteZV75n+WMaLQYLQPlizPb+aMK4bkkLHSN9StpR4cyCEADor5L/AFCsK2GhAtdqmsoW6aBT20+vlP5KRHTvv4WH8lgnaBMBT0T/AECrJ6iOmgD5HBo3JJV1WYTW1j2gyRQxje+pKq8S4Poq9+atr6l7bWEcVmNSIjfJtk5Kmo4ixJgpGvdS058w2JWkjw+0IY8a2VjQU1JhNG2lo4gyNvzJ+aW45jdWvMTxDbHltSd1lmqujfTvJAu1RVqpI2yNIc0EFUFfSCmmFjo7Ydljp9h8d8j+f/13/wCSIhCFD2ghCEAhCEAhCEAdkIOyEhncIQhGkdBCEIBCEIBCFZ0eAV1ZlLYwxjtczijLLmpijd50rLqfQUQdA6tqBanj2v8AeKvqThKCN4dVSGa33Ro1ReMpW0mAyRwgMaG5QB0V4q8Dzfl6TX0w/wD1S8N4XFxTiNTiGIAyUsL8kUV7Nd6legQU8NNCIoImxMAsGsFgFk/2elrMAa3YlxJWwbstbTzp8vkvNp5kBtgu20SrLlioYsXx5RGOGHFogedSOBJ7tvqrTDcRMtJHVRuu1zQVb4lQtrKCWF7QWvaQQsZwuXQfFYRUAh8Di0X6t6Ke4IbaDFWuAzjXupRmpqhgDw2T+YbLFYRUFlJJHK4l1NK6J1zra+n0Kto5erXKDSzqcCwysJdJTtueoJCgzcFYXKwhpkjv+FycjqZAE+2rfbcojlXM4RlpyPhsXna0bNe0OVhFhdZEB/nA7/o3SxWuCWytcVCNnWQztHikB+Vkp0LnDxWI9kgVDjuSu88obVeI8L4fikRZO2SMHflPy3Uag4JwLDpOZDTOMn4nyFyunzi26ZNR6q251pMHmUVNGPDG0WS8kTdmhQzUeqOaSqCYZGN2ATT6q2xsmdSmnjREuy1Tj1UCaRzk7JqmXBRJCK4uzJbHFdc3VcAULFk6XVDicnNqLg3aNFbVUxjp3EDxbBVApXGKzzre91D0/js9cGaL36Q0KQ6im1LRmHomHNcw2e0g+oVdPt8XkY8sbpO3EIQjYIQhAIQhAHZCDshTDK4QhChrHQQhWeE4JPiji5p5cTTq8jf2UxWbcQxz58eCnvknUKxda0uNmgk9gtnT8I0UQBkc+Y+psFawYdTUzbQwMZbsFtGCft89n/yPBTjHEywcGEV1RbLA4A9Totjg8c8VJyahzXPj8pb+FWBjAaVCneYHxvGweL+239Vp+GIh855ny+TzJiLxERCfZYrjw3w5ze5AW1uLm2yxvGjOZCGLKeGGOdya4LPLoo2eq2jd1i+GGObSA9Wla+F+doJ3T+y3aSBdAGq402S4hmdfoiuzgZmFliOKqN2E4zT4xA05HnJNbt0K3Qc0aJjEsPjxPD5aeQXa9tiphETywcEzI+JpIv8A0cTizs9Ht3+n6KJU4y/h7Fo4akXopTlL7f6Z6fJN1tJVQwOht/nMNkEsf8QHb3CtMewyHiPhwywC7nRhzVpHrMxtad/S9pZWTMDgQQRcEdQp7KYOF15bwfjNZTSuw6ozZ4TlAPRelUOIhwDX6XVb19Z0r3G0r4QE2snGUQbqpDJGuAsbolks3RUVRJGiNRZJTfRSZGvedAmHUzuqLQiukcSuXKkfDLhgsixgHVOsK7yiuFgChJ9p0TUvslRgkaLrwcuyIQ3hNOCdefEm3IGSNVzolkXKbldlaqpQ6j7SXL0CSY8xATjbG56lLhZmeh7aP00AA10ASpKOKpvzIw4Hbujmhz+VHrlNnEd1LZoFvTH9ywt5F6T/AAnSnl4djdcxSuZ6OF1DlwCsjuWhsg9CtSzU3Twj000VpxVl6GH5zy8Xdt/7YGWCWA2ljcw+osm1vamnjdERKxr221us/iXDr4WOnpjmZa5j7eyxthmOYfSeD89jzzFMses//iiQj0QsX0nYOyEHZCmGVwhCFDX6TcJw1+K4gynbo06ud+EL0OOnionQwxNszLlsPTqoPDeFjDsLbI5v20/icfToFZv+0rBfTK24+a7sVPWNvzf5rz58rNNK/wDGpWXX0XCNfRKISZfCy3dbPBNO13Cr6+O9NIbdCR8lOOu2iaqW3hcO4UJMU9RnbodgHe4IWc4lPOmyjXRToZjBFTyW0yljr9gbKurGumncHCxBXJ5FdS9Dxbb7PcOR5KctIWiiGQgKkwxvJIHRXkRDwLLOs8L372kXKcc7lQC25TbUqpaeQCOitKkSQyQ3uSpDKnK4aqtDkvNYKu1/VC4poiGMxOBoL4dH2+81V+AmOnmdTNIMEo5sPbXcLTwPZUQuglAIcLWPULIOiODYr+75SWeIvpnnYjsphb6QuKMDOF4izGqSM8s6TADYd1f4Xy6ukZIDcOG6uWNixCh5cjQ5rxZzSs5Q0svDuIuopSXUchvA/t/CVaZ2hbCaSjeGuvy9rqygnjnboQVFmYJoS3e4WOxWvxHAagTUw50APiidu31BSI2o9ALWgJDgCqHBuJI8RpmvuWkjUO3CuhO0gdbqJSCwErhiBSwcx7JVrKEmDFdJFMCdU+XAHdJMtkV24I2sGgTFQ4BiJZwBuq+pqQeqJNvddyALphsmd1gpA0agS4hoKrJpDJJodE/VT9AorAcuYqEjK7onnSfCw+E/bOBIB9t0ljwwOkf5QosAknlnqH75CGjsFtix+07lhlyajUJGDRujo4y5xc4jMSepOqumDM0WKh0UXLpWNPQD9FMiuHaLpntxpDGFu6eZc9kAEtB7pTQoBI1pjdmFxY3CbFuSwu3yhLnOWBwG7vCPmk1AAHhOwsmkxPLGY7TNpsRJY3K2QZgB3VatJj8BmohMN4zr7LNrhyV1Z+m/D+R+fxazM8xwDshB2QqQ9K4U3B6T43F6eG1wXXd7BQlp+CKXmV89Q4aRsyj3Ktjru0Q5fkM/4PFveO9NqGeADoNkyW2q7g7st9VKOwCjVFmSRydnWd7HRenrh+TzO5LAKbmNnAWTw9e6YnIzb3TQQ0XF7JEw8B9Qnm+UJMo8KqM3PGRSTN/BKfrqq5jjKCb3ezQ+o6K7njvNUM6OaHfPZUxjMM9wLWUXp+SumuK/pbaVA4NCs6WXUaqrDLG7fKdR6J+nkIkAK83ms6l6M6tG18w3FwnW2c3KdlGhf4U+1y2hj1KpqC6Cpc07dEqOYHdWktLDVAGRtyOoUSTCcv8ApSfIrP1mG0WhE+K5UoPqncRoqTiDD/h5/C8eJkg8zD3BTM9DUDTll3qFX/EVGHTXe1wZfsrQncSVhFTX4RWDDsUyyRu8MVRtm9CtHVU0VdTuhmFwevUHuqOatpq6l5cuUtP09VOw6ubMwQOfeWMaHfMFZSS4KeppG5X/AGsY0Dxv81CxWhZWQkgjN2V02fLpuuOZBMDmaAT1CK7Y3DaI0rnMyZQCr+NkkcQc05x2UqXDGuN2S6dimmRz0rtW3A7KFkulnbI0C/i9U7I+26i8lktpInZJOoTWIVJp42h+jiNlAVLUBqiSVXqq99WXuOqZfNfqglzVV2mxKh5nSvtdNGUd09TeJ10E2niytuioeGtsDqnL5GKE853klSg2Yg99ykvAc6wOg3Sp5cjMrR4io8h5TQz7ztSprX2nStresbKkAk8IHhCfhgywkW8xAK5TwlwCsBFYRj1Xdr1jTz5mbTsoMswJcbUsN6JTWm+iqlKh1bbqneiai3unnbIjZh/iqI2HYXf+ShVbzmNipIcHVUn8Mf6lQZvOUTBMsYmopIyL5mkLGkZSQdxotrG4ALJYjFyMRmZ/FcfNcuePt9j/AI1m1a+Kf9ox2Qg7IWEPr7hbzgmENwd8nWSQ/RYQAlwAFydgF6Jwowx8OxZmlpLnHX3W3jx/J8//AJDk9fE9d9zC7NiSAmpohJE5pO7SEXAG+qcd/ptcvQfnaPSSc2naXecaH3Cbn0kC7CcldKweV4zj06FKm1cNFCQwEgXXJG3+Scb5dE28g3KrKVXK3/Otvs8Fp/VVtXD9poFb1bbESDdpBCaqIAblTWdE8quIG2V2y61pbIlvYWJ1rOYwHqsc+Lf8qujBl1/GU6F4LAL6qRE+6rWXGikxy2cAuWHVKwY8tKcLwBqmRq0FR6zMYCATf0VpUjs5JiMDXEBwuk/Hwvvq0++qzk1HI4lzHm6hyU9czyPKzmdOiKtW80UvnjjPyUKXD8PEjZoWiOVhuHNcRqsvM7FowSHKorMSx2LyG/8A0q1f5JmunoEeItlkMbj9oN/VcqKp7WHIduy8wjj4txWoBpo35gb57ZQ35rd0QxKlw+NuMPifOBYvjGnzV7U9Y3tnuN6Ny41XwPPUKRTcXhotURH3SskVQ0WIcEh+EwSHUfkqLcJLuL6LJdkJLh2VRU40a6dz3bn6J2Xh+Mi7QUwMCezyojZPPJCTnc/QKWzDXC2dSY6NreiCFBA558WytYIWxtvZdbG1vRNz1GUWCIcqJgBlCjSStgjzO8ztghhGr3a9h3TTYTPI6WY2Y3dSrv8AYDwyL4iTVx2CahY+eUvdqSVx16qcZR9m3RqtKWmDQBZdWOvrG5ceW/tOoO08Aa26ksYTJa98o/VORxWalxMu97uhNh8leeWXRIYnA2wSg3VKDUHWD1SyTZcYEPNmlEIMT71tQOmRo/VR5W3eSlUzs2IVI20aPonHgB5uolaEfyqkxyIPqGPj8Tw3xhovYeqs6+rFJCS1hkldpHGN3HsEhzGUlM+jbZ8sh/zUgJJc4jy+w0tb1XL5F4rGv29H47Pbx80ZKsuUIc0tcWkEFuhB6IXPV+m2nephb8O0UVViJdUMa6FjfGCbb6fTdbDBJZG00tFO8PmpZDGSBYOb90/ks1g7KOPC4KmoL44uY9kxhJMj9vA0dL3GvqraOq5fErHsyNinaGOZGbtie3Qsv1NsuvcFWxXmuT+n578xn/8AIzzMdRw0N+i7zHEZegQdLa7JOy9V4CLLJkr4bfeBapZs43Kr8QGnNA1icHhS43547nrqo+w/o0Hudk08XGqWHZm3O4SXPJ0CiRHlYHsIPUJkeOnaetrH5aKYW3CjMbZ0jOl8w+aqlXVUei7A3wBSZ479AE3Gyw0K0rbfCsx9k5U2Ac+uikuZZqS1jZHWJs7cErnzYtfyq6sOXf8AGUuE+GyU+2XUXCajuzwu3T+4sufTfaulpbEkbJvkFzrEKe8FmtrhcAjcLg2KrNV4sjNoWEWcAU43Dae9zEw+4UgOY3rdNSVLW6BTEImTloom2AAA6BV9Y5szCwi7eyJajMU2BfVTJCmnop6ZxkpH2HVh2KTBjhify6uMwu7nYq7LQVEqqKKcWc0FRpb2PRVscrQ5rgW9wU6JWH7yzEmCz08jnUkz4+uW+i6yXEYm+OMSW/DomjcNLdncJDntA0VG2tm+/HI35JXxoI15v5WUaTtYTVAA3UGSQjxOOi62aOQ6MIJ2uUkU7mTPqKlwyt27BTEbVmTrbvAvoB9EzLMat4hhFoWnU/iKZEr6+XLGCIQd+rv7K6oaEMANrLppj1zLkvk3xDlJSZYwAFZxRBtrpUcQa1PgaBaSxcLcrT2Gq7E20TQRra6VKPsy0busPql2sLDWyIJA9FwjVOW0XLIOAaJmodZhI2Tx0Ch1cmlkFfRPzVtU4fjDfopkvnuoGDnO+okt5pXKdMSCUT9qnGKSSdjJoCBPDcs0/wC9dFHwfEziELpo4RDWyuPxDreEdLgfiP03VwNW6piGmipy8RNDA92YgDc91jkx1vrcNaXmrJTNLJpGuJJDiDc67oUnFWBuJS+vi/NC5NanT9Tw3/Jipb9xDXVQpsIq5YjKYYquAGO7rN5ken5lp/NoUbBcIkqTFVTx8mCI3giB3/icepO5+mgV/W0FLiDGx1UTJmtdmAcNj3UgAC2UWC9CMcRb2flFrzbt147pDvQ2SnapB3K1UNSjO0g7HRM0TjyC07sJb+SkOHhUJjuXWOAFhIL/ADCgWMbtF0nVNRu0slh2qgK6e6ac0Cdh7jKnjsEmRtwT21CaIMyMB6JoMsphAtt6pstudAo0kw9nhUWVpG2hU9wJ6JuSPuFeLfUo1+jVLUNnIilOWUeU91KDS12VwsVWzU2bUaO6HslMxBzAI6rpoJAP1WN8f3DemTfErHQjVV9a11O4OHlKfZWRkeYe6hYriEfJyixK5rOipo1JtumnTFxtdVLqwlxN0ptYBrdVa6WocBqUoztaqh1bpuo02IxsBL5WM/mcApiJlErw1QB3CSakFZd+O0YOtSw2FzY3SRxHRWBFQ0g9Vf0t+lPaGndJm1Q0CxLgLLON4ip9C2UO9gSpjMQqapp5UElu5blH1U/jt+kTev7SKl7RexVfK+xuSpTaOok8/hv21T8ODNc67wXH1WtcEz2xtniOlK6omc4CAFx7qWKfEK8NZOfAOgWjp8MjZa7Bf2VhHTtZo1oW3pWnTCclrKzD8N5UYFrWVtHEGmycaz0TmUdFXe0EBiU1uvySrWK60aIE5bysB6eJLIshou5zu1gukgndShzRcPdKIASHOsoSbkfoVV1D/tNb7qdNJ4T6qqqH6k32USmCcBbahJvqXuP1U2TV11Ewbw4XETu4E/mVKJ8WqIcA33TbtSeiWXalI+/3USlQY7C3ncwaOyjN+ZshSsegvG97fwBx+Rt/VC47V/lL7z4jyvbxoi89cNu1ANh7IFrIedCvRfAuOcuXFr2XCLlJNxpog451jeyg1ZEbmS2PgcD+e6mEkXUSsbzIHdLghBJjeE4DqCqygqOZTsudRofdWTBtoVAeJ2AKVuE2NDsEth39UAzWK3Vpskje10oECTsHC3zC4QC/UIOaW0K47XdKsANEOb1VUmSwO6JiSAEbXupZAt2TdtkFZLhuYXY4tcqyowisJuMsg7XsVpiBvcpOw6qs1rP0vW9qsa/DaxrrfBSn2cLJBwuvcPDTFn8zgtqbXsSm3aX7KsY6r/msxb+HK6ZtpJcgO4abIi4OgveVpkP8Rutkcq4bAlbVmIZWm0/ajpuH6SnFhAwA6HTdUkuCwUVe+nMLcm7CRuCtsXNPVV2NUhmo+aweOHxC3UdQtPyM9Sr6XB4GtaRG0A67KeKYN0A2SqB7ZqVjvRTRGCToFE5DUo8NLsSFKZCANktrSBYJwN1JVJsn1IyWGiXbsukbWSiD1VZlZxqWAuNABToAskBp2660eq6RcoJytcewJUgiIDb/AIiVw3XQMsYFtgkknupQ4Xb3TMzrDddlcANVHfKMpFlEhmeQAbqnrpbRSm/3T+al1cxGmipK6YuMcIPikdr7BV7XheUZ5dFG38LQE7zL2VeKgAZdypdM0ubchEHuuuyRrn0TsvhZcqOCRYjdJIN4m3PTkECzg5pPa7f7ITlS0uonm2YtGa3dCwvW0zxDv8fyZw19YacHukO0I7pSQdXCy63nFDVcfa2i7smpLjZQEOKjTeJpAO+ifzb+ijzatJQVNBMY66aA7h2YfP8AutMzSJpPZYurkNLj1PJs2W7D77haqeo5ULB/CEDstQGHU2SW1jC62bZUFdijY7+LX3USkrnzy3adEGy5gdGSDctOZOWs7TZVdHUOcA09lPjlzMGuo0PyQOHUWXTp0uuBwsPdKAHYIbNOuQeiSR3TjrWKauok2NARqkm5Zrou66arjwfkiSH9P1ukOvkJ1uCluNlwgkaDQlBHdKGXLtLd07QQOxOubTxXaCC9zyPC0DcpmpH2T2A5XP0BttqrDhXnx11eJ545XPa3l5GZcoBN+pv0SIRM8LP914fD9nkfK4aFxNlAxLDWUkPPicZID4Xg7tv39FZSQuE2WRgJLrwyNYXGIhp82tiCUnFWmn4enMxBc6Ija13e3utJrGmUTO2NpY/gqx1OdGnxM9lZDY63VZjzuRHTTWIdnt8rKdTvzxA26LHTbaSNW3SmF13A7eyS03aNE60KRwlKRobrpAJ2QDbpwG6bbYbpBqGgi13X00Uh1183QBNv/wBM6rhlbo53hubAFDjoBa13C3qgXI/VMveGtJuuPfZxUeWTw36KUG3zalR5JtE3I42J7qO+Q2IKjadI1VJ17qiMpmr3SfdZ4WqdilRyYjY+J3hBVXC6wASIWXtI3M4OKv6ZgDAqHDyC1qv4zlZ8kRJmsfs1MA3Nt0Tvzzey4weJVISGHQXGyFwDRCiUw0N0nrdc2abro1G2i1ZunbRMvJ7p0myZePCbHVAw5xF0w992lPyAa6fkoz9ESoOIojJScxnniIeLeinYpiIFDHODo+Nrhr3CKsNeHNOxFlmcUqzHhLYS7xQeD3HRR3wmEKWtdU1Nrk3Oy1ODUZbECRuslwxTmuxEOI0C9NpadsbQMov6KbRrhMy7DCYzfVPsfaR7e/iSnAC9t0ySRUM9QQVCiUHaX9U8x9yoZdf5lOh+iB17xY6prNc6bJD9Vw2GxtdEnSQGhJLnEBc6WvokF1rIAk3ulZ7MA3TeZdUDuYWNxdNsJp6ls8LQ2VuxH6FLXLa9VXaVoziCQMHMpnF1vuOFvqodVVVOJzNdOBHCw3bEDck9CT/RMjKDbWydZvbWynco1EKHijRlIy9y6QlWNG21Oy43CrOJfFV0LO5JVvTttGwelkDzRdoCcaNNUlti3RKAsEHbNOyHGzNEXSXOAaR3CBWKUFTBwhPiUQ8ZLG3P3A4gXHyKXRQwwU9PmMjiAM1xqf8AdNVWMulwUYbJI0RAtdldr4m7JqkxFslQ2hp6anmc1rnNdOyxk6kDXp2um9p0tXUVPWU9RHM57WEEsOW4FtemoTGC0Ta7h3EGXtUUzzPGb6gBrSR7EEpE2JNjpH0crIKeSeMEGMeIDfodtEzTz/u7Ba2S7XTVLBTkg2vmtf8ASwCrzEbhPc6Q3vDiCNimXbHsuG4YAdLdEl7rCw6q6EWW99NlDlcdVOkOYWKgVbhHC517AKqWZxuovWxxa2aMxTEDi5wAN1GdI6rnlmJ8ztPZSqGMvnAA0WuuDbS4UxxsSNArlxyN3UCgaI49U/LJcWWSDRddxKkRi/TRRoxd6nNGVqmEgkNboUJLnWKFCGhdse3RDRpug+VF/DotFTbz1Og9Ey9wLk8+4bsojz4roEyOsNCmHkkapUsmvyTL3+D5IlX1jw0G/ZYjiZxLC+Mnpm9lrcWlyQkrGYlPzI3g2NxZTXtMNLwJR5aESnd/Vbphs1ZnheNtNhULLahgJ+avubdtlFp3KD2cnqm5Dqx3ZyQJNN12aow+lopKjE8QFFA1zWh3KdIXOOwsPZTWNong44i/zT7ACFTv4y4LiOuKV81v+VR2v+ZTT/2kcJRaMpMXqPcxsv8Aqr/jlG167Q2touHWyzcv7U8BaLw8N1chH/Mq7foFHd+1a8nKpuEqTmakNklke7vsp/FP7RtrCLWukOLTsb+yxkn7V8bNO6opsFwqCJrgwyNpi+ziLgXJ30TDP2i8bVlNV11LLFFBRhpmfBTMaI8xsL6d0/F/ZuW8ZBLJqyORw/haSpUeFV8wGSiqXf8A6yF5JP8AtI4vnHix+sH8jgz9AqyfijHaq5nxiuk/mnd/up/FBy9wdguIMYXPpnR2H33NB/K+qr/zXkOC1tQ/iLDpZZ5ZD8Qy5c9x+8O5XqhqRzXC/UrLJWK9LV39pYvfVOtPbRRmSg2KkNIDfRZrKHHnXxehHYE/VXEJ0GipMbcP35SD+A/qrmN4sEJSGmzV0v03TWckdN0guP1UoPF9hum3PKBqRfZLbEHdN0ER9FLNISxwBPQjQqvmosQDXGnfC0jRpu7QrRsblI20Uepd02UwbU9FJiUNIY6qmgmnGnPY9zXH+6dHxFVUNkqXBrIW+GNpJAO1z3KlkjVNMNzKb76JrlO5IkOhA6Jp77kBdebbhMudlN1ARK+11R8Q1PJwqdwNjlsFZTyEvKzfFFQBSxwk/wCo76D/ALCmI3KVLSSARhqvsOaG+JZ2Blniy0WHtswb2V7DQ0z226p19yNlFpr9tCp7Iy5oWQ5BF1KlEACy7HEQNEoxkqYQjvBy2AQnnM11QoSvBquE6Lo2uuGx7q6hmV5tZQZJFLlO4UCXQImDL5ATukOPgKS61yQUlx0PZQlUYwbwEBYmt1I/mW1xXxMKyFfHZjj21V69p+m2waoPIaDtYWVw2Q2WewYF1LEQegV4wHcKs9qpbHae6puN2B3CM5H3ZonfUj+qtmO0uVGx2gkxXAamjhc0SShpaXbaOBVqTqUS8iOq4tT/AIDrxmL6qnFuguU0ODaky8sTtcfRq294HOB62koOIJJa5rH0zqWZj2PIAcCw6e/ZWlZiGGQftPbVwVcbsPdG1ol6AGDLY+t9E1F+z2ocAX1LQD6KZF+zuPaWrfrvYbqfyRCs13O1BhMlDNwviGH1eINopTPHPFmjc/Pla4EC3XUalTuGuI8Nwfh+rw6qp3zfvF7mTnrHHks0t7nMbq/h/Z/hbTd7pn/9VlI/wThDNoC7+Z11H5YPWHlnaxuizj90/kvVv8J4W3aAAJQ4bomO8EY0VJyraebYVBU/vKkkbDIWRzsc4hu3iH+y9FLi+rfYkjOdfmpjMIijb4dPZLZQNY4kLO9vZMHILk7qc02bbrZR4osumqks2PdZjN4862NUZ/ht9VcxuLo2npZUnEvhxSlO/h/qraldenafRSmUpjgduic3F7JtgsSNU80eFEFNbdqdAOW4SWtBATltN1I5m6qFPJdylOdZV8zjzT1QBckxO+yJ7uJSXvsCbjZdb4advspDErgodQ82tdPTO8e6hSnUkqqTT3bkrB8Q13xmKFrDdkPhFu619fUGOncGmziFg3xHNc65nHVa44+0ychqJGW2NlcUWONhIbJGRbqqxkF2A2UqKnD7A9VadSNVQ8QUT7DmBp9dFeU9fBI0ZZGn2Kwf7qEjScuqYfQ1VMbxSPb7FU9I/Zt6eyoZ3B+acEoOt15hT47X0bwJHF4H5q/oOKI57Nech9VX1mDtr3vBFkKshrmStu1yFWUNWSQNEm/W/wAko7Js7KypmV1gdN1BlOtuilzHqoE79UTCNI4XSC7Q62SXu3PdIcfCfZQlXYhd17kLM4m20MnsVp6nxN9VncXZakkdboVavYuuGZObh8LvktVEzRYrgqXPRFn4XLcRA5QotHI6GXBFktrS30XQLFOW6qEGXsvJqfM1Kp6dkZzW1PVde3xsPbROAmw0UoKdYbErt9BqknU7JQ0PbRAXNkg6kJzoQm3g3+aBN7LttbldDSTsu5cvRQkk76LpvZdDSTqDZKMbi4AfIKJCGnxbpxtlJGEVeTNyrDtfX8kwWlt2uFi3Q3UbRtluJzbEaQ7+E3HzVph5zUzVV8TtBrac/wAJ/VWmG/8ADjf81ZKwbqSU7pbVNtAzJ4b6bKB1vZKO+6SAAUEqYDb9FAlILjqpkr7BV8jruJukhMrvsnD0TspysA7ABR5TcNv1IH1S6l1kShSvFzqoczrN9FIed1DmcANUFRi03Jo5ZHebKbLMFh5EBO5N1ccRS/5Kx3kcGhQJWf5WnNutlrXoPQx3aNFMgjFwm4GWjBCkwttuomUrGkYCNtFMdSse3y7qNS2vYqxjNwFnMinrMHbKDZous7VYdJTSEkGy9DawOGtlBr8PbM12ivWyNMjR109PYB5I7ITlVROpai1tDshW4WexFNu0ZvulX1Tb/KO6ozRpT4VXzXzKfN7qDI25KhMIZ1SXsuwgKUItF10VmnqoSq5ILt2Wf4jYI8Pfbc6LWy2A2WP4qkvTlo0Vq9hHBUpa6VvQG69Ep5A5o06Lzjg1maaU+i39K+4AP5qcnaE5wIS4zmC5u1IYbOVAt+7fQrpO3suS3yAjoh24HRSgsHWyUU3tYhdBJNkDoseq4Wbm43XWbdF3p81AGBdy5na3suxnWyUHa76KRGrZo6RjHvlbE1xPiI9FJ4UmpMRxed8da2o+HYLtvcNLjukyME1nZrFpuE1Sc3D68VUDIjcZZGgZS4KJJ5W81ZW/vt0MJpTB8S2HMZbBoIub+vol8RUrYJo3tcC4v5ZPQ6XTRr8IL+bLGQ/OJC0xknMOva6h1de/E6lspY6KCK/La7zOJ3cVSNKxEsxxJHeqpzboVPw9toGgdQofEhy1NMRe2qm0BHw4Oqs0TWjX3TwBvodE2zzBOgXKKujukOOxulmwTUhPdSlHmdYlV7z4zc7qZMSCdOqgudeSyJdc37WME6Zgk1L7mwXHutURD1/ompnXegYdsVBkHNeewUuZxDbDc6BN8oNjsFAxnEri7EIItmtF0qVt6KnP8dvopHE9MG1NPMBYHwpkj/w6M9nhbfUJTaVgMYHopTYbFM0otGp7Ros5HYfCbqfC7QAqG1ttApMQ9VUWEZ0S3jUXF03FqAnXght9EQpMapQ4B4aNEKyrmtmp3W3CFbaWqOxITb9Te17JwpuQboohVDvEbFMt10Ts1kxcN1RJw5duqbkIDTaybMwCZkm0A7qEm6iQC4Fr2WI4mkzh/otXVyXvZYvHHZmvv3CtTtKbwUSZ5RfUBbyIeEFebcJT8jGA0+WRuX5r02AAsb7K2TtVMhfmZbqlObY3UZjuU+52KmNIe1UDbyTC7rolX0HshzbNI7pLT9m32RDov8l35pGyUNAiTwdbRdzEhMi9t0thIRBzW21tUlxsNyu/7rh6aIHG6Aa7otokucO64H2aqhQGu6XYAXTBksdQlB4LVGkqPig2bB/MVJws3p2i+6hcTu0p/VxUvCiDTNPorC1YRdPDRuiYjIvtfVOuIyixRAcRdNSO7Lsh0vdR5JLe6JMzE2OqhHV19yn5nnKd1FvqolLjzaoZ6AlNuNjqlF1579mf1TMzrNQNjxyZuyWWgojaGtASjbfqolMMpxfKG/CRDzOcXfJRWjNhbiDsQfqmeKJudjYsbtjAaP6p+kGfDZR/Ddb61WBaUjLxCwUlosEjDhnpmEKZywDsFkG2m5spEdgd0yWhp1Tke+6gT4iAFLDWvYoUe26ksOiIckgFrg7hCVFmc+51AQrDQ2F01LpmQhFVfL1UOVxB3QhEwiPecxF0w55LtShChJibWMlY7GTcH+ZCFenafozhJLKqNzdCHD9V6tRnNA0nsEIU5O1T0w8JTsLjlCELMSHBR49YW+yEKUAruwQhB0bJbBcoQgUTouEnTVCFAUdkdAhCBG7tV07IQoSoOJ//AGnq8/opuE/8O32QhWjolZMOydO9kIUINSkhR3+W6EKEoc7jlHqmL6oQiTFzzXnsAm3eKYAoQrBZ3SX6NJ7BCFSUsJj7QKxp6kqXhmsEg6ZChC6PpC3wg/5Zg9ArctGXbdCFhKYMytAK4zzIQiEuLcBS4xshCCSxoEZshCFYf//Z" alt="Foto Pengembang">
+        </div>
+        <div class="dev-info">
+          <div class="splash-eyebrow">Dikembangkan Oleh</div>
+          <h2>Nila Sukma Dewi</h2>
+          <div class="role">SMAN 1 Lemahabang · Kabupaten Cirebon</div>
+          <p class="desc">Gim edukasi "Napas Sel: Ekspedisi Katabolisme" disusun untuk membantu siswa SMA memahami tahapan katabolisme karbohidrat (respirasi sel) secara interaktif, menyenangkan, dan dapat diakses sepenuhnya tanpa koneksi internet.</p>
+          <div class="dev-tags">
+            <span class="stat-chip">Materi Biologi SMA</span>
+            <span class="stat-chip">10 Soal Interaktif</span>
+            <span class="stat-chip">Full Offline</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+  <div class="outer-frame" id="outerFrame"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   NAPAS SEL — EKSPEDISI KATABOLISME
+   Gim edukasi offline. Semua audio disintesis via Web Audio API,
+   semua diagram dibuat via SVG inline (tanpa aset eksternal).
+   ============================================================ */
+
+/* ---------------- STAGE FIT (16:9, tanpa scroll, adaptif orientasi) ---------------- */
+const STAGE_W = 1280, STAGE_H = 720;
+const stageEl = document.getElementById('stage');
+function fitStage(){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scale = Math.min(vw / STAGE_W, vh / STAGE_H);
+  const left = (vw - STAGE_W * scale) / 2;
+  const top = (vh - STAGE_H * scale) / 2;
+  stageEl.style.transform = `translate(${left}px, ${top}px) scale(${scale})`;
+  const outer = document.getElementById('outerFrame');
+  const pad = Math.max(6, 18 * scale);
+  outer.style.inset = pad + 'px';
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', ()=>setTimeout(fitStage, 150));
+fitStage();
+
+/* ---------------- GLOBAL PINCH-ZOOM (seluruh layar, bingkai elastis) ---------------- */
+const viewportEl = document.getElementById('viewport');
+const zoomLayerEl = document.getElementById('zoomLayer');
+const outerFrameEl = document.getElementById('outerFrame');
+const hintGlobalEl = document.getElementById('zoomHintGlobal');
+const btnResetZoomGlobal = document.getElementById('btnResetZoomGlobal');
+
+(function globalPinchZoom(){
+  const MIN = 1, MAX = 4;
+  let scale = 1, panX = 0, panY = 0;
+  let pointers = new Map();
+  let startDist = 0, startScale = 1, startMid = {x:0,y:0}, startPan = {x:0,y:0};
+  let lastTap = 0;
+
+  function applyTransform(elastic){
+    zoomLayerEl.style.transition = elastic ? 'transform .55s cubic-bezier(.34,1.56,.64,1)' : 'none';
+    zoomLayerEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    updateFrameFeedback(elastic);
+    btnResetZoomGlobal.classList.toggle('show', scale > 1.03);
+  }
+  function updateFrameFeedback(elastic){
+    // bingkai kini ikut membesar/mengecil bersama transform zoomLayer (nested di dalamnya);
+    // di sini hanya menambahkan efek cahaya elastis sesuai level zoom untuk penegasan visual
+    const t = Math.min(1, (scale - 1) / (MAX - 1));
+    outerFrameEl.style.transition = elastic ? 'border-color .55s cubic-bezier(.34,1.56,.64,1), box-shadow .55s cubic-bezier(.34,1.56,.64,1)' : 'none';
+    outerFrameEl.style.borderColor = `rgba(244,185,66,${0.35 + t * 0.4})`;
+    outerFrameEl.style.boxShadow = `0 0 ${18 + t*30}px rgba(244,185,66,${t*0.35}) inset`;
+  }
+  function clampPan(){
+    const maxPan = (scale - 1) * (Math.min(window.innerWidth, window.innerHeight) / 2);
+    panX = Math.max(-maxPan, Math.min(maxPan, panX));
+    panY = Math.max(-maxPan, Math.min(maxPan, panY));
+  }
+  function settle(){
+    let out = false;
+    if(scale < MIN){ scale = MIN; out = true; }
+    if(scale > MAX){ scale = MAX; out = true; }
+    if(scale <= 1.001){ panX = 0; panY = 0; }
+    clampPan();
+    applyTransform(true);
+  }
+
+  viewportEl.addEventListener('pointerdown', (e)=>{
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size === 2){
+      const pts = [...pointers.values()];
+      startDist = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      startScale = scale;
+      startMid = {x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2};
+      startPan = {x:panX, y:panY};
+    }
+  }, {passive:true});
+
+  viewportEl.addEventListener('pointermove', (e)=>{
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size === 2){
+      const pts = [...pointers.values()];
+      const dist = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      const mid = {x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2};
+      scale = startScale * (dist / startDist);
+      scale = Math.max(0.85, Math.min(MAX + 0.5, scale));
+      panX = startPan.x + (mid.x - startMid.x);
+      panY = startPan.y + (mid.y - startMid.y);
+      applyTransform(false);
+      hintGlobalEl.classList.remove('show');
+    }
+  }, {passive:true});
+
+  function endPointer(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size < 2){ settle(); }
+  }
+  viewportEl.addEventListener('pointerup', endPointer, {passive:true});
+  viewportEl.addEventListener('pointercancel', endPointer, {passive:true});
+
+  viewportEl.addEventListener('wheel', (e)=>{
+    if(!e.ctrlKey && Math.abs(e.deltaY) < 2) return;
+    e.preventDefault();
+    scale += (e.deltaY < 0 ? 0.2 : -0.2);
+    settle();
+  }, {passive:false});
+
+  viewportEl.addEventListener('pointerdown', ()=>{
+    const now = Date.now();
+    if(now - lastTap < 300 && scale > 1.03){ scale = 1; panX=0; panY=0; settle(); AudioEngine.click(); }
+    lastTap = now;
+  });
+
+  btnResetZoomGlobal.addEventListener('click', ()=>{
+    scale = 1; panX = 0; panY = 0; settle(); AudioEngine.click();
+  });
+
+  // tampilkan hint sesaat setelah gim dimulai, lalu hilang otomatis
+  window.showZoomHint = function(){
+    hintGlobalEl.classList.add('show');
+    setTimeout(()=> hintGlobalEl.classList.remove('show'), 3200);
+  };
+})();
+
+/* ---------------- AUDIO ENGINE (synthesized, fully offline) ---------------- */
+const AudioEngine = (()=>{
+  let ctx = null, muted = false, ambientOn = false, ambientTimer = null, masterGain = null;
+  function ensure(){
+    if(!ctx){
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = ctx.createGain();
+      masterGain.gain.value = 0.9;
+      masterGain.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+  }
+  function tone(freq, dur, type='sine', vol=0.18, delay=0, glideTo=null){
+    if(muted) return;
+    ensure();
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t0);
+    if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    osc.connect(gain); gain.connect(masterGain);
+    osc.start(t0); osc.stop(t0 + dur + 0.05);
+  }
+  function click(){ tone(520, 0.08, 'square', 0.10); }
+  function navigate(){ tone(340, 0.12, 'triangle', 0.12); tone(500,0.1,'triangle',0.08,0.05); }
+  function correct(){ tone(523,0.12,'sine',0.16); tone(659,0.12,'sine',0.16,0.1); tone(784,0.18,'sine',0.18,0.2); }
+  function wrong(){ tone(220,0.22,'sawtooth',0.14); tone(160,0.28,'sawtooth',0.12,0.08); }
+  function success(){ [523,659,784,1046].forEach((f,i)=>tone(f,0.22,'sine',0.16,i*0.12)); }
+  function pick(){ tone(700,0.06,'square',0.08); }
+  function drop(){ tone(400,0.09,'triangle',0.1); }
+  function startAmbient(){
+    if(ambientOn || muted) return;
+    ensure(); ambientOn = true;
+    const pad = ctx.createOscillator(); const padGain = ctx.createGain();
+    pad.type='sine'; pad.frequency.value = 65.4;
+    padGain.gain.value = 0.035;
+    pad.connect(padGain); padGain.connect(masterGain); pad.start();
+    const pad2 = ctx.createOscillator(); const pad2Gain = ctx.createGain();
+    pad2.type='triangle'; pad2.frequency.value = 98;
+    pad2Gain.gain.value = 0.02;
+    pad2.connect(pad2Gain); pad2Gain.connect(masterGain); pad2.start();
+    AudioEngine._padNodes = [pad, pad2];
+    const scale = [392,440,523,587,659];
+    function pluck(){
+      if(!ambientOn) return;
+      if(!muted){
+        const f = scale[Math.floor(Math.random()*scale.length)];
+        tone(f, 1.6, 'sine', 0.045);
+      }
+      ambientTimer = setTimeout(pluck, 1800 + Math.random()*1400);
+    }
+    pluck();
+  }
+  function stopAmbient(){
+    ambientOn = false;
+    clearTimeout(ambientTimer);
+    if(AudioEngine._padNodes){ AudioEngine._padNodes.forEach(n=>{ try{n.stop();}catch(e){} }); AudioEngine._padNodes=null; }
+  }
+  function setMuted(v){
+    muted = v;
+    if(masterGain) masterGain.gain.value = muted ? 0 : 0.9;
+    if(muted) stopAmbient(); else startAmbient();
+  }
+  function isMuted(){ return muted; }
+  return { click, navigate, correct, wrong, success, pick, drop, startAmbient, stopAmbient, setMuted, isMuted, ensure };
+})();
+
+/* sync all mute buttons */
+const muteButtons = ['btnMuteSplash','btnMuteMenu','btnMuteKuis'].map(id=>document.getElementById(id));
+function refreshMuteIcons(){
+  muteButtons.forEach(b=> b.textContent = AudioEngine.isMuted() ? '🔇' : '🔊');
+}
+muteButtons.forEach(b=> b.addEventListener('click', ()=>{
+  AudioEngine.ensure();
+  AudioEngine.setMuted(!AudioEngine.isMuted());
+  refreshMuteIcons();
+}));
+
+/* ---------------- SCREEN NAVIGATION ---------------- */
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target = document.getElementById('screen-'+id);
+  target.classList.add('active');
+  AudioEngine.navigate();
+  if(id === 'menu') updateMenuProgress();
+}
+document.querySelectorAll('.menu-card').forEach(c=>{
+  c.addEventListener('click', ()=> goScreen(c.dataset.go));
+});
+document.getElementById('btnBackMateri').addEventListener('click', ()=> goScreen('menu'));
+document.getElementById('btnBackKuis').addEventListener('click', ()=> goScreen('menu'));
+document.getElementById('btnBackDev').addEventListener('click', ()=> goScreen('menu'));
+document.getElementById('btnMateriToKuis').addEventListener('click', ()=>{ AudioEngine.click(); startQuiz(); });
+document.getElementById('btnKeMenu').addEventListener('click', ()=> goScreen('menu'));
+
+/* ---------------- SPLASH SCREEN ---------------- */
+let USER_NAME = '', USER_KELAS = '';
+const inpNama = document.getElementById('inpNama');
+const inpKelas = document.getElementById('inpKelas');
+const splashErr = document.getElementById('splashErr');
+const btnStart = document.getElementById('btnStart');
+[inpNama, inpKelas].forEach(inp=> inp.addEventListener('focus', ()=> AudioEngine.click()));
+
+btnStart.addEventListener('click', ()=>{
+  AudioEngine.ensure();
+  const nama = inpNama.value.trim();
+  const kelas = inpKelas.value.trim();
+  if(!nama || !kelas){
+    splashErr.textContent = 'Mohon isi nama dan kelas terlebih dahulu ya.';
+    AudioEngine.wrong();
+    return;
+  }
+  splashErr.textContent = '';
+  USER_NAME = nama; USER_KELAS = kelas;
+  AudioEngine.click();
+  runLoading();
+});
+
+function runLoading(){
+  btnStart.disabled = true;
+  const wrap = document.getElementById('loadingWrap');
+  const fill = document.getElementById('loadingFill');
+  const pct = document.getElementById('loadingPct');
+  wrap.classList.add('show');
+  let p = 0;
+  const timer = setInterval(()=>{
+    p += 4 + Math.random()*10;
+    if(p >= 100){ p = 100; clearInterval(timer); }
+    fill.style.width = p + '%';
+    pct.textContent = Math.floor(p) + '%';
+    if(p >= 100){
+      setTimeout(()=>{
+        document.getElementById('sapaanUser').textContent = `Halo, ${USER_NAME} · ${USER_KELAS}`;
+        AudioEngine.success();
+        AudioEngine.startAmbient();
+        goScreen('menu');
+        showZoomHint();
+        btnStart.disabled = false;
+        wrap.classList.remove('show');
+        fill.style.width='0%'; pct.textContent='0%';
+      }, 350);
+    }
+  }, 140);
+}
+
+function updateMenuProgress(){
+  const pct = quizFinished ? Math.round((score/100)*100) : 0;
+  document.getElementById('atpFillMenu').style.width = pct + '%';
+}
+
+/* ================================================================
+   MATERI — konten pembelajaran
+   ================================================================ */
+const materiData = [
+  {
+    title: 'Peta Mitokondria', num:'00',
+    render: ()=>`
+      <h2>Peta Mitokondria</h2>
+      <div class="sub">Cubit / gulir untuk memperbesar diagram</div>
+      <div class="materi-flex">
+        <div class="zoom-box" id="zoomBoxMito">
+          <div class="zoom-inner" id="zoomInnerMito">${mitoSVG()}</div>
+          <button class="icon-btn zoom-reset" id="zoomResetMito" title="Reset zoom">⤾</button>
+          <div class="zoom-hint">CUBIT / SCROLL UNTUK ZOOM · GESER UNTUK GESER</div>
+        </div>
+        <div class="body-text">
+          <p>Katabolisme karbohidrat (respirasi sel) berlangsung pada beberapa lokasi berbeda di dalam sel. Perhatikan diagram penampang mitokondria di samping:</p>
+          <p><b>Sitoplasma</b> — tempat berlangsungnya glikolisis.</p>
+          <p><b>Matriks mitokondria</b> — tempat dekarboksilasi oksidatif dan siklus Krebs.</p>
+          <p><b>Membran dalam (krista)</b> — tempat berlangsungnya transpor elektron dan sintesis ATP.</p>
+        </div>
+      </div>`
+  },
+  {
+    title: 'Pengertian Katabolisme', num:'01',
+    render: ()=>`
+      <h2>Apa itu Katabolisme?</h2>
+      <div class="sub">Konsep Dasar</div>
+      <div class="body-text">
+        <p><b>Katabolisme</b> adalah rangkaian reaksi metabolisme yang memecah molekul kompleks (seperti glukosa) menjadi molekul yang lebih sederhana, disertai <b>pelepasan energi</b> dalam bentuk ATP.</p>
+        <p>Contoh utama katabolisme adalah <b>respirasi sel</b>, yaitu proses pemecahan glukosa (C₆H₁₂O₆) menjadi karbon dioksida dan air, sambil melepaskan energi yang ditangkap sel dalam bentuk ATP.</p>
+        <p>Respirasi sel terdiri atas empat tahapan utama:</p>
+        <span class="stat-chip">1. Glikolisis</span>
+        <span class="stat-chip">2. Dekarboksilasi Oksidatif</span>
+        <span class="stat-chip">3. Siklus Krebs</span>
+        <span class="stat-chip">4. Transpor Elektron</span>
+        <p style="margin-top:14px;">Jika oksigen tersedia, prosesnya disebut <b>respirasi aerob</b>. Jika tidak tersedia oksigen, sel dapat menempuh jalur <b>fermentasi (anaerob)</b>.</p>
+      </div>`
+  },
+  {
+    title: 'Glikolisis', num:'02',
+    render: ()=>`
+      <h2>Glikolisis</h2>
+      <div class="sub">Tahap 1 · Berlangsung di Sitoplasma</div>
+      <div class="body-text">
+        <p>Glikolisis adalah proses pemecahan satu molekul <b>glukosa (6 karbon)</b> menjadi dua molekul <b>asam piruvat (3 karbon)</b> melalui serangkaian 10 reaksi enzimatis di sitoplasma.</p>
+        <p>Hasil bersih (net) dari satu kali glikolisis:</p>
+        <span class="stat-chip">2 ATP (net)</span>
+        <span class="stat-chip">2 NADH</span>
+        <span class="stat-chip">2 Asam Piruvat</span>
+        <p style="margin-top:14px;">Meskipun tahap ini menghasilkan ATP dalam jumlah kecil, glikolisis penting karena tidak memerlukan oksigen sehingga dapat berlangsung baik pada kondisi aerob maupun anaerob.</p>
+      </div>`
+  },
+  {
+    title: 'Dekarboksilasi & Krebs', num:'03',
+    render: ()=>`
+      <h2>Dekarboksilasi Oksidatif &amp; Siklus Krebs</h2>
+      <div class="sub">Tahap 2 &amp; 3 · Berlangsung di Matriks Mitokondria</div>
+      <div class="body-text">
+        <p><b>Dekarboksilasi oksidatif</b> mengubah asam piruvat menjadi <b>Asetil KoA</b> (2 karbon), melepaskan CO₂ dan menghasilkan NADH.</p>
+        <span class="stat-chip">2 NADH</span>
+        <span class="stat-chip">2 Asetil KoA</span>
+        <p style="margin-top:10px;"><b>Siklus Krebs</b> (siklus asam sitrat) kemudian mengoksidasi Asetil KoA sepenuhnya menjadi CO₂, sambil menangkap elektron berenergi tinggi dalam bentuk NADH dan FADH₂.</p>
+        <p>Hasil siklus Krebs (untuk 2 putaran per glukosa):</p>
+        <span class="stat-chip">2 ATP</span>
+        <span class="stat-chip">6 NADH</span>
+        <span class="stat-chip">2 FADH₂</span>
+      </div>`
+  },
+  {
+    title: 'Transpor Elektron', num:'04',
+    render: ()=>`
+      <h2>Transpor Elektron</h2>
+      <div class="sub">Tahap 4 · Berlangsung di Membran Dalam Mitokondria (Krista)</div>
+      <div class="body-text">
+        <p>NADH dan FADH₂ yang dihasilkan pada tahap sebelumnya menyumbangkan elektron ke rantai transpor elektron pada membran dalam mitokondria.</p>
+        <p>Aliran elektron ini memompa proton (H⁺) melintasi membran, menciptakan gradien yang digunakan enzim <b>ATP sintase</b> untuk memproduksi ATP dalam jumlah besar.</p>
+        <p><b>Oksigen (O₂)</b> berperan sebagai akseptor elektron terakhir, membentuk molekul air (H₂O).</p>
+        <span class="stat-chip">± 32–34 ATP</span>
+        <span class="stat-chip">Akseptor akhir: O₂ → H₂O</span>
+      </div>`
+  },
+  {
+    title: 'Fermentasi (Anaerob)', num:'05',
+    render: ()=>`
+      <h2>Fermentasi (Anaerob)</h2>
+      <div class="sub">Jalur Alternatif Tanpa Oksigen</div>
+      <div class="body-text">
+        <p>Ketika oksigen tidak tersedia, sel dapat melanjutkan glikolisis melalui jalur fermentasi agar NADH dapat diubah kembali menjadi NAD⁺, sehingga glikolisis dapat terus berlangsung.</p>
+        <p><b>Fermentasi alkohol</b> (contoh: ragi Saccharomyces) mengubah asam piruvat menjadi <b>etanol</b> dan <b>CO₂</b>.</p>
+        <p><b>Fermentasi asam laktat</b> (contoh: sel otot manusia saat kekurangan oksigen) mengubah asam piruvat menjadi <b>asam laktat</b>.</p>
+        <p style="margin-top:10px;">Fermentasi hanya menghasilkan energi bersih sebesar 2 ATP per glukosa — jauh lebih sedikit dibanding respirasi aerob.</p>
+      </div>`
+  },
+  {
+    title: 'Ringkasan Energi', num:'06',
+    render: ()=>`
+      <h2>Ringkasan Hasil Energi</h2>
+      <div class="sub">Total ATP per Molekul Glukosa (Aerob)</div>
+      <div class="body-text">
+        <p>Secara teoritis, satu molekul glukosa yang dioksidasi sempurna secara aerob dapat menghasilkan sekitar <b>36–38 ATP</b>, walaupun jumlah aktual dapat bervariasi tergantung efisiensi transpor NADH ke mitokondria.</p>
+        <span class="stat-chip">Glikolisis: 2 ATP</span>
+        <span class="stat-chip">Siklus Krebs: 2 ATP</span>
+        <span class="stat-chip">Transpor Elektron: ± 32–34 ATP</span>
+        <p style="margin-top:14px;">Reaksi ringkas respirasi aerob:</p>
+        <p style="font-family:var(--font-mono); color:var(--gold); font-size:15px;">C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O + Energi (ATP)</p>
+      </div>`
+  }
+];
+
+function mitoSVG(){
+  return `<svg viewBox="0 0 400 300" width="92%" height="92%">
+    <ellipse cx="200" cy="150" rx="170" ry="120" fill="#0d2e28" stroke="#4ECDC4" stroke-width="3"/>
+    <path d="M60,150 Q90,90 150,95 Q120,150 150,205 Q90,210 60,150 Z" fill="none" stroke="#F4B942" stroke-width="3"/>
+    <path d="M110,150 Q140,100 190,105 Q165,150 190,195 Q140,200 110,150 Z" fill="none" stroke="#F4B942" stroke-width="2.4" opacity=".8"/>
+    <path d="M160,150 Q190,110 230,113 Q210,150 230,187 Q190,190 160,150 Z" fill="none" stroke="#F4B942" stroke-width="2.4" opacity=".7"/>
+    <path d="M210,150 Q235,120 270,122 Q252,150 270,178 Q235,180 210,150 Z" fill="none" stroke="#F4B942" stroke-width="2" opacity=".6"/>
+    <circle cx="200" cy="150" r="3" fill="#FF6B5B"/>
+    <text x="200" y="152" fill="#F2EFE6" font-family="Georgia,serif" font-size="13" text-anchor="middle">Matriks</text>
+    <text x="200" y="42" fill="#4ECDC4" font-family="Georgia,serif" font-size="13" text-anchor="middle">Membran Luar</text>
+    <text x="200" y="270" fill="#F4B942" font-family="Georgia,serif" font-size="13" text-anchor="middle">Krista (Membran Dalam)</text>
+  </svg>`;
+}
+
+const materiTabsEl = document.getElementById('materiTabs');
+const materiPanelEl = document.getElementById('materiPanel');
+let currentMateriIdx = 0;
+
+function renderMateriTabs(){
+  materiTabsEl.innerHTML = materiData.map((m,i)=>
+    `<button class="tab-item${i===currentMateriIdx?' active':''}" data-idx="${i}"><span class="num">${m.num}</span>${m.title}</button>`
+  ).join('');
+  materiTabsEl.querySelectorAll('.tab-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      AudioEngine.click();
+      currentMateriIdx = +btn.dataset.idx;
+      renderMateriTabs();
+      renderMateriPanel();
+    });
+  });
+}
+function renderMateriPanel(){
+  materiPanelEl.innerHTML = materiData[currentMateriIdx].render();
+  materiPanelEl.scrollTop = 0;
+  if(currentMateriIdx === 0) attachPinchZoom(document.getElementById('zoomBoxMito'), document.getElementById('zoomInnerMito'));
+  const resetBtn = document.getElementById('zoomResetMito');
+  if(resetBtn) resetBtn.addEventListener('click', (e)=>{ e.stopPropagation(); const inner=document.getElementById('zoomInnerMito'); inner.style.transform='translate(0px,0px) scale(1)'; inner.dataset.scale=1; inner.dataset.tx=0; inner.dataset.ty=0; AudioEngine.click(); });
+}
+renderMateriTabs();
+renderMateriPanel();
+
+/* ---------------- PINCH ZOOM (mouse + touch, elastic rubber-band) ---------------- */
+function attachPinchZoom(box, inner){
+  let scale = 1, tx = 0, ty = 0;
+  let pointers = new Map();
+  let startDist = 0, startScale = 1;
+  let dragging = false, lastX=0, lastY=0;
+  const MIN=1, MAX=3.2;
+
+  function apply(elastic){
+    inner.style.transition = elastic ? 'transform .35s cubic-bezier(.34,1.56,.64,1)' : 'none';
+    inner.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  }
+  function clamp(){
+    if(scale < MIN){ scale = MIN; tx=0; ty=0; }
+    if(scale > MAX){ scale = MAX; }
+  }
+  box.addEventListener('pointerdown', (e)=>{
+    e.stopPropagation();
+    box.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size === 1){ dragging = true; lastX = e.clientX; lastY = e.clientY; box.style.cursor='grabbing'; }
+    if(pointers.size === 2){
+      dragging = false;
+      const pts = [...pointers.values()];
+      startDist = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      startScale = scale;
+    }
+  });
+  box.addEventListener('pointermove', (e)=>{
+    e.stopPropagation();
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pointers.size === 2){
+      const pts = [...pointers.values()];
+      const dist = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      scale = startScale * (dist / startDist);
+      scale = Math.max(MIN-0.3, Math.min(MAX+0.3, scale));
+      apply(false);
+    } else if(dragging && pointers.size === 1){
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      if(scale > 1){ tx += dx; ty += dy; apply(false); }
+    }
+  });
+  function endPointer(e){
+    pointers.delete(e.pointerId);
+    dragging = false; box.style.cursor='grab';
+    if(pointers.size === 0){ clamp(); apply(true); }
+  }
+  box.addEventListener('pointerup', endPointer);
+  box.addEventListener('pointercancel', endPointer);
+  box.addEventListener('pointerleave', (e)=>{ if(pointers.size<=1){ endPointer(e); } });
+  box.addEventListener('wheel', (e)=>{
+    e.preventDefault(); e.stopPropagation();
+    scale += (e.deltaY < 0 ? 0.15 : -0.15);
+    clamp();
+    apply(true);
+  }, {passive:false});
+  box.addEventListener('dblclick', ()=>{ scale=1; tx=0; ty=0; apply(true); AudioEngine.click(); });
+}
+
+/* ================================================================
+   KUIS ENGINE
+   ================================================================ */
+const quizData = [
+  { type:'mc', q:'Katabolisme adalah proses reaksi kimia dalam sel yang bersifat…',
+    options:[
+      'Anabolik, membentuk molekul kompleks dari molekul sederhana',
+      'Katabolik, memecah molekul kompleks menjadi sederhana disertai pelepasan energi',
+      'Anabolik yang selalu menyerap energi dari lingkungan',
+      'Proses yang tidak melibatkan enzim sama sekali'
+    ], correct:1 },
+  { type:'mc', q:'Tahap glikolisis pada respirasi sel berlangsung di bagian…',
+    options:['Matriks mitokondria','Sitoplasma (sitosol)','Membran dalam mitokondria','Ruang antarmembran'], correct:1 },
+  { type:'match', q:'Pasangkan tahap respirasi sel dengan hasil utamanya!',
+    left:['Glikolisis','Dekarboksilasi Oksidatif','Siklus Krebs','Transpor Elektron'],
+    right:['2 ATP + 6 NADH + 2 FADH₂','2 ATP + 2 NADH + 2 Asam Piruvat','± 32–34 ATP + H₂O','2 NADH + 2 Asetil KoA'],
+    correct:[1,3,0,2] /* index in right for each left */ },
+  { type:'fill', q:'Lengkapi kalimat berikut:',
+    template:'Hasil bersih (net) ATP yang dihasilkan pada tahap glikolisis adalah {0} ATP.',
+    answers:[['2','dua']] },
+  { type:'fill', q:'Lengkapi kalimat berikut:',
+    template:'Molekul yang berperan sebagai akseptor elektron terakhir pada rantai transpor elektron adalah {0}.',
+    answers:[['oksigen','o2','o₂']] },
+  { type:'drag-order', q:'Seret kata untuk mengurutkan tahapan respirasi aerob dari awal hingga akhir!',
+    words:['Glikolisis','Dekarboksilasi Oksidatif','Siklus Krebs','Transpor Elektron'],
+    correctOrder:['Glikolisis','Dekarboksilasi Oksidatif','Siklus Krebs','Transpor Elektron'] },
+  { type:'mc', q:'Fermentasi alkohol oleh sel ragi (Saccharomyces) menghasilkan produk sampingan berupa…',
+    options:['Asam laktat dan CO₂','Etanol dan CO₂','Metana dan H₂O','Asam asetat dan O₂'], correct:1 },
+  { type:'mc', q:'Jika oksigen tersedia cukup (aerob), total ATP yang dihasilkan secara teoritis dari 1 molekul glukosa adalah…',
+    options:['2 ATP','4 ATP','36–38 ATP','± 100 ATP'], correct:2 },
+  { type:'match', q:'Pasangkan istilah berikut dengan definisi/fungsinya!',
+    left:['NADH','FADH₂','Asetil KoA','Sitokrom'],
+    right:['Protein pembawa elektron pada membran dalam mitokondria','Senyawa 2-karbon yang masuk ke siklus Krebs','Pembawa elektron dari siklus Krebs menuju rantai transpor','Pembawa elektron berenergi tinggi hasil glikolisis & siklus Krebs'],
+    correct:[3,2,1,0] },
+  { type:'drag-blank', q:'Lengkapi reaksi kimia respirasi aerob berikut dengan menyeret kata yang tepat!',
+    templateParts:['C₆H₁₂O₆ + 6 ', ' → 6 CO₂ + 6 ', ' + Energi (ATP)'],
+    words:['O₂','H₂O','CO₂','Glukosa'],
+    correctBlanks:['O₂','H₂O'] }
+];
+
+let curQ = 0, score = 0, quizFinished = false;
+let userAnswers = new Array(quizData.length).fill(null);
+let checked = false;
+
+function startQuiz(){
+  curQ = 0; score = 0; quizFinished = false;
+  userAnswers = new Array(quizData.length).fill(null);
+  goScreen('kuis');
+  renderQuestion();
+}
+document.getElementById('btnUlangi').addEventListener('click', ()=>{ AudioEngine.click(); startQuiz(); });
+
+const qCounter = document.getElementById('qCounter');
+const progressFill = document.getElementById('progressFill');
+const scoreTag = document.getElementById('scoreTag');
+const qTypeBadge = document.getElementById('qTypeBadge');
+const qText = document.getElementById('qText');
+const qBody = document.getElementById('qBody');
+const feedbackMsg = document.getElementById('feedbackMsg');
+const btnCheck = document.getElementById('btnCheck');
+const btnNext = document.getElementById('btnNext');
+
+const typeLabels = { mc:'Pilihan Ganda', match:'Menjodohkan', fill:'Isian Singkat', 'drag-order':'Seret Kata · Urutan', 'drag-blank':'Seret Kata · Lengkapi' };
+
+function renderQuestion(){
+  checked = false;
+  const item = quizData[curQ];
+  qCounter.textContent = `SOAL ${curQ+1} / ${quizData.length}`;
+  progressFill.style.width = `${(curQ/quizData.length)*100}%`;
+  scoreTag.textContent = `SKOR ${score}`;
+  qTypeBadge.textContent = typeLabels[item.type];
+  qText.textContent = item.q;
+  feedbackMsg.textContent = ''; feedbackMsg.className='feedback-msg';
+  btnCheck.style.display = 'inline-block'; btnCheck.disabled=false;
+  btnNext.style.display = 'none';
+
+  if(item.type === 'mc') renderMC(item);
+  else if(item.type === 'match') renderMatch(item);
+  else if(item.type === 'fill') renderFill(item);
+  else if(item.type === 'drag-order') renderDragOrder(item);
+  else if(item.type === 'drag-blank') renderDragBlank(item);
+}
+
+function renderMC(item){
+  qBody.innerHTML = `<div class="mc-options">${item.options.map((op,i)=>
+    `<button class="mc-opt" data-i="${i}"><span class="letter">${String.fromCharCode(65+i)}</span>${op}</button>`
+  ).join('')}</div>`;
+  let selected = null;
+  qBody.querySelectorAll('.mc-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(checked) return;
+      AudioEngine.click();
+      qBody.querySelectorAll('.mc-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selected = +btn.dataset.i;
+      userAnswers[curQ] = selected;
+    });
+  });
+  btnCheck.onclick = ()=>{
+    if(selected === null){ shake(); return; }
+    checked = true;
+    const ok = selected === item.correct;
+    qBody.querySelectorAll('.mc-opt').forEach((b,i)=>{
+      b.classList.toggle('correct', i === item.correct);
+      if(i === selected && !ok) b.classList.add('wrong');
+    });
+    finalizeCheck(ok);
+  };
+}
+
+function renderMatch(item){
+  const rightOrder = item.right.map((r,i)=>i);
+  qBody.innerHTML = `<div class="match-wrap">
+    <div class="match-col">${item.left.map((l,i)=>`<div class="match-item" data-side="L" data-i="${i}"><span class="tagnum">${i+1}</span>${l}</div>`).join('')}</div>
+    <div class="match-col">${rightOrder.map(i=>`<div class="match-item" data-side="R" data-i="${i}">${item.right[i]}</div>`).join('')}</div>
+  </div>`;
+  let selLeft = null;
+  const pairs = {}; // leftIndex -> rightIndex
+  userAnswers[curQ] = pairs;
+  qBody.querySelectorAll('.match-item[data-side="L"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(checked) return;
+      AudioEngine.click();
+      qBody.querySelectorAll('.match-item[data-side="L"]').forEach(e=>e.classList.remove('sel'));
+      selLeft = +el.dataset.i;
+      el.classList.add('sel');
+    });
+  });
+  qBody.querySelectorAll('.match-item[data-side="R"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(checked || selLeft === null) return;
+      AudioEngine.pick();
+      pairs[selLeft] = +el.dataset.i;
+      qBody.querySelectorAll('.match-item[data-side="L"]').forEach(e=>{
+        e.classList.toggle('paired', pairs[+e.dataset.i] !== undefined);
+        e.classList.remove('sel');
+      });
+      selLeft = null;
+    });
+  });
+  btnCheck.onclick = ()=>{
+    if(Object.keys(pairs).length < item.left.length){ shake(); return; }
+    checked = true;
+    let allOk = true;
+    qBody.querySelectorAll('.match-item[data-side="L"]').forEach(e=>{
+      const li = +e.dataset.i;
+      const ok = pairs[li] === item.correct[li];
+      if(!ok) allOk = false;
+      e.classList.add(ok ? 'correct' : 'wrong');
+    });
+    finalizeCheck(allOk);
+  };
+}
+
+function renderFill(item){
+  const parts = item.template.split('{0}');
+  qBody.innerHTML = `<div class="fill-wrap">${parts[0]}<input type="text" class="fill-input" id="fillInput" placeholder="jawaban…">${parts[1]||''}</div>`;
+  const input = document.getElementById('fillInput');
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') btnCheck.click(); });
+  btnCheck.onclick = ()=>{
+    const val = input.value.trim().toLowerCase();
+    if(!val){ shake(); return; }
+    checked = true;
+    const ok = item.answers[0].some(a=>a.toLowerCase()===val);
+    input.classList.add(ok?'correct':'wrong');
+    input.disabled = true;
+    if(!ok){
+      const correctSpan = document.createElement('span');
+      correctSpan.style.cssText='color:#5FD98A; font-family:var(--font-mono); margin-left:8px; font-size:13px;';
+      correctSpan.textContent = `(Jawaban: ${item.answers[0][0]})`;
+      input.insertAdjacentElement('afterend', correctSpan);
+    }
+    userAnswers[curQ] = val;
+    finalizeCheck(ok);
+  };
+}
+
+/* ---- generic pointer-based drag helper ---- */
+function makeDraggable(tile, onDrop){
+  let ghost = null, startX=0, startY=0;
+  tile.addEventListener('pointerdown', (e)=>{
+    if(tile.classList.contains('placed') || checked) return;
+    tile.setPointerCapture(e.pointerId);
+    tile.classList.add('dragging');
+    AudioEngine.pick();
+    const r = tile.getBoundingClientRect();
+    startX = e.clientX - r.left; startY = e.clientY - r.top;
+    function move(ev){
+      tile.style.position='fixed';
+      tile.style.left = (ev.clientX - startX)+'px';
+      tile.style.top = (ev.clientY - startY)+'px';
+      tile.style.zIndex = 999;
+    }
+    function up(ev){
+      tile.removeEventListener('pointermove', move);
+      tile.removeEventListener('pointerup', up);
+      tile.classList.remove('dragging');
+      tile.style.position=''; tile.style.left=''; tile.style.top=''; tile.style.zIndex='';
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const slot = el ? el.closest('.drag-slot') : null;
+      onDrop(slot, tile);
+    }
+    tile.addEventListener('pointermove', move);
+    tile.addEventListener('pointerup', up);
+  });
+}
+
+function renderDragOrder(item){
+  const shuffled = [...item.words].sort(()=>Math.random()-0.5);
+  qBody.innerHTML = `<div class="drag-wrap">
+    <div class="drag-slots">${item.words.map((_,i)=>`<div class="drag-slot" data-i="${i}">Tahap ${i+1}</div>`).join('')}</div>
+    <div class="drag-pool">${shuffled.map((w,i)=>`<div class="drag-tile" data-word="${w}" data-id="t${i}">${w}</div>`).join('')}</div>
+  </div>`;
+  const slotVals = new Array(item.words.length).fill(null);
+  userAnswers[curQ] = slotVals;
+  qBody.querySelectorAll('.drag-tile').forEach(tile=>{
+    makeDraggable(tile, (slot, tileEl)=>{
+      if(!slot) return;
+      if(slot.classList.contains('filled')){ return; }
+      slot.textContent = tileEl.dataset.word;
+      slot.classList.add('filled');
+      slot.dataset.word = tileEl.dataset.word;
+      tileEl.classList.add('placed');
+      slotVals[+slot.dataset.i] = tileEl.dataset.word;
+      AudioEngine.drop();
+    });
+    // click-to-place fallback for accessibility (also works well on small screens)
+    tile.addEventListener('click', ()=>{
+      if(checked || tile.classList.contains('placed')) return;
+      const emptySlot = [...qBody.querySelectorAll('.drag-slot')].find(s=>!s.classList.contains('filled'));
+      if(!emptySlot) return;
+      emptySlot.textContent = tile.dataset.word;
+      emptySlot.classList.add('filled');
+      emptySlot.dataset.word = tile.dataset.word;
+      tile.classList.add('placed');
+      slotVals[+emptySlot.dataset.i] = tile.dataset.word;
+      AudioEngine.drop();
+    });
+  });
+  qBody.querySelectorAll('.drag-slot').forEach(slot=>{
+    slot.addEventListener('click', ()=>{
+      if(checked || !slot.classList.contains('filled')) return;
+      const word = slot.dataset.word;
+      const tile = [...qBody.querySelectorAll('.drag-tile')].find(t=>t.dataset.word===word && t.classList.contains('placed'));
+      if(tile) tile.classList.remove('placed');
+      slot.textContent = `Tahap ${+slot.dataset.i+1}`;
+      slot.classList.remove('filled');
+      slotVals[+slot.dataset.i] = null;
+      AudioEngine.click();
+    });
+  });
+  btnCheck.onclick = ()=>{
+    if(slotVals.some(v=>v===null)){ shake(); return; }
+    checked = true;
+    let allOk = true;
+    qBody.querySelectorAll('.drag-slot').forEach((slot,i)=>{
+      const ok = slotVals[i] === item.correctOrder[i];
+      if(!ok) allOk = false;
+      slot.classList.add(ok?'correct':'wrong');
+    });
+    finalizeCheck(allOk);
+  };
+}
+
+function renderDragBlank(item){
+  const shuffled = [...item.words].sort(()=>Math.random()-0.5);
+  qBody.innerHTML = `<div class="drag-wrap">
+    <div style="font-size:18px; line-height:2.2; color:var(--ink-dim); font-family:var(--font-mono);">
+      ${item.templateParts[0]}<span class="drag-slot" data-i="0" style="display:inline-flex; min-width:90px; height:38px; vertical-align:middle; margin:0 6px;">___</span>${item.templateParts[1]}<span class="drag-slot" data-i="1" style="display:inline-flex; min-width:90px; height:38px; vertical-align:middle; margin:0 6px;">___</span>${item.templateParts[2]}
+    </div>
+    <div class="drag-pool">${shuffled.map((w,i)=>`<div class="drag-tile" data-word="${w}" data-id="b${i}">${w}</div>`).join('')}</div>
+  </div>`;
+  const slotVals = [null, null];
+  userAnswers[curQ] = slotVals;
+  qBody.querySelectorAll('.drag-tile').forEach(tile=>{
+    makeDraggable(tile, (slot, tileEl)=>{
+      if(!slot || slot.classList.contains('filled')) return;
+      slot.textContent = tileEl.dataset.word;
+      slot.classList.add('filled');
+      slot.dataset.word = tileEl.dataset.word;
+      tileEl.classList.add('placed');
+      slotVals[+slot.dataset.i] = tileEl.dataset.word;
+      AudioEngine.drop();
+    });
+    tile.addEventListener('click', ()=>{
+      if(checked || tile.classList.contains('placed')) return;
+      const emptySlot = [...qBody.querySelectorAll('.drag-slot')].find(s=>!s.classList.contains('filled'));
+      if(!emptySlot) return;
+      emptySlot.textContent = tile.dataset.word;
+      emptySlot.classList.add('filled');
+      emptySlot.dataset.word = tile.dataset.word;
+      tile.classList.add('placed');
+      slotVals[+emptySlot.dataset.i] = tile.dataset.word;
+      AudioEngine.drop();
+    });
+  });
+  qBody.querySelectorAll('.drag-slot').forEach(slot=>{
+    slot.addEventListener('click', ()=>{
+      if(checked || !slot.classList.contains('filled')) return;
+      const word = slot.dataset.word;
+      const tile = [...qBody.querySelectorAll('.drag-tile')].find(t=>t.dataset.word===word && t.classList.contains('placed'));
+      if(tile) tile.classList.remove('placed');
+      slot.textContent = '___';
+      slot.classList.remove('filled');
+      slotVals[+slot.dataset.i] = null;
+      AudioEngine.click();
+    });
+  });
+  btnCheck.onclick = ()=>{
+    if(slotVals.some(v=>v===null)){ shake(); return; }
+    checked = true;
+    let allOk = true;
+    qBody.querySelectorAll('.drag-slot').forEach((slot,i)=>{
+      const ok = slotVals[i] === item.correctBlanks[i];
+      if(!ok) allOk = false;
+      slot.classList.add(ok?'correct':'wrong');
+    });
+    finalizeCheck(allOk);
+  };
+}
+
+function shake(){
+  feedbackMsg.textContent = 'Lengkapi jawabanmu terlebih dahulu.';
+  feedbackMsg.className = 'feedback-msg no';
+  AudioEngine.wrong();
+}
+
+function finalizeCheck(ok){
+  btnCheck.style.display = 'none';
+  btnNext.style.display = 'inline-block';
+  btnNext.textContent = curQ === quizData.length-1 ? 'Lihat Hasil →' : 'Soal Berikutnya →';
+  if(ok){
+    score += 10;
+    feedbackMsg.textContent = 'Benar! Kerja bagus.';
+    feedbackMsg.className = 'feedback-msg ok';
+    AudioEngine.correct();
+  } else {
+    feedbackMsg.textContent = 'Belum tepat, lihat pembahasan di layar.';
+    feedbackMsg.className = 'feedback-msg no';
+    AudioEngine.wrong();
+  }
+  scoreTag.textContent = `SKOR ${score}`;
+  quizResults[curQ] = ok;
+}
+
+let quizResults = new Array(quizData.length).fill(null);
+
+btnNext.addEventListener('click', ()=>{
+  AudioEngine.click();
+  if(curQ === quizData.length-1){
+    finishQuiz();
+  } else {
+    curQ++;
+    renderQuestion();
+  }
+});
+
+function finishQuiz(){
+  quizFinished = true;
+  progressFill.style.width = '100%';
+  const skorEl = document.getElementById('hasilSkor');
+  skorEl.innerHTML = `${score}<span>/100</span>`;
+  let msg = '';
+  if(score >= 90) msg = `Luar biasa, ${USER_NAME}! Pemahamanmu tentang katabolisme sangat matang.`;
+  else if(score >= 70) msg = `Kerja bagus, ${USER_NAME}! Sedikit lagi menguasai penuh materi katabolisme.`;
+  else if(score >= 50) msg = `Cukup baik, ${USER_NAME}. Coba pelajari kembali bagian materi yang belum dikuasai.`;
+  else msg = `Jangan menyerah, ${USER_NAME}! Pelajari kembali materi lalu coba lagi ya.`;
+  document.getElementById('hasilMsg').textContent = msg;
+
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = quizData.map((item,i)=>{
+    const ok = quizResults[i];
+    return `<div class="review-row"><span class="dot ${ok?'ok':'no'}"></span><span class="rt"><b>Soal ${i+1}</b> (${typeLabels[item.type]}) — ${ok?'Jawaban benar':'Jawaban kurang tepat'}</span></div>`;
+  }).join('');
+
+  if(score === 100) AudioEngine.success();
+  goScreen('hasil');
+}
+
+</script>
+</body>
+</html>
